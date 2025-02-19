@@ -8,13 +8,14 @@ import {
   Snowflake,
   ThermometerSun
 } from "lucide-react";
+import type { WeatherData } from '@/lib/types';
 
 interface WeatherCardProps {
   location: string;
 }
 
 export default function WeatherCard({ location }: WeatherCardProps) {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading } = useQuery<WeatherData>({
     queryKey: ['/api/weather', location],
     enabled: !!location
   });

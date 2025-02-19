@@ -7,7 +7,7 @@ export class OpenAIHandler {
   async chat(message: string) {
     try {
       const response = await openai.chat.completions.create({
-        model: "gpt-4o",
+        model: "gpt-4",  // Changed from gpt-4o as it seems to be causing issues
         messages: [
           {
             role: "system",
@@ -28,7 +28,13 @@ Respond in JSON format with: { "message": { "role": "assistant", "content": "you
         response_format: { type: "json_object" }
       });
 
-      return JSON.parse(response.choices[0].message.content);
+      if (!response.choices[0].message.content) {
+        throw new Error("No response content received");
+      }
+
+      const parsed = JSON.parse(response.choices[0].message.content);
+      parsed.message.timestamp = Date.now();
+      return parsed;
     } catch (error: any) {
       throw new Error("Failed to process message: " + error.message);
     }
