@@ -5,6 +5,7 @@ import MapView from '@/components/map-view';
 import WeatherCard from '@/components/weather-card';
 import CulturalInfo from '@/components/cultural-info';
 import Transportation from '@/components/transportation';
+import LocationImage from '@/components/location-image';
 
 export default function Home() {
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
@@ -36,9 +37,10 @@ export default function Home() {
                 location={selectedLocation}
               />
             </Card>
-            
+
             {selectedLocation && (
               <>
+                <LocationImage location={selectedLocation} />
                 <CulturalInfo location={selectedLocation} />
                 <Transportation location={selectedLocation} />
               </>

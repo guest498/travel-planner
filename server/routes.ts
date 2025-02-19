@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { AIHandler } from "./ai-handler";
 import { z } from "zod";
+import { OpenAI } from "openai";
 
 const OPENROUTE_API_KEY = process.env.OPENROUTE_API_KEY || 'demo';
 
@@ -101,6 +102,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ]
       };
       res.json(transportationData);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post('/api/generate-image', async (req, res) => {
+    try {
+      const { location } = z.object({
+        location: z.string()
+      }).parse(req.body);
+
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+      const response = await openai.images.generate({
+        model: "dall-e-3",
+        prompt: `A beautiful, high-quality travel photograph of ${location}. Show iconic landmarks and scenery. Photorealistic style.`,
+        n: 1,
+        size: "1024x1024",
+        quality: "standard",
+      });
+
+      res.json({ imageUrl: response.data[0].url });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
