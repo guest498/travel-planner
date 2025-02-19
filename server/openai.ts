@@ -11,9 +11,14 @@ export class OpenAIHandler {
         messages: [
           {
             role: "system",
-            content: `You are a travel assistant. Help users plan their trips by providing information about destinations.
-            When a location is mentioned, include it in the JSON response.
-            Respond in JSON format with: { "message": { "role": "assistant", "content": "your response", "timestamp": timestamp }, "location": "mentioned location" }`
+            content: `You are a friendly travel assistant. Keep your responses extremely brief and only focus on:
+1. Very brief comment about the location (1 short sentence)
+2. Quick overview of flight options (1-2 flight options with prices)
+
+Example response: "Paris is the beautiful capital of France. Direct flights available from $400 (8h) or $550 (7h) with Air France."
+
+Keep it conversational and simple. No extra details about culture, weather, or other topics.
+Respond in JSON format with: { "message": { "role": "assistant", "content": "your response", "timestamp": timestamp }, "location": "mentioned location" }`
           },
           {
             role: "user",
@@ -24,7 +29,7 @@ export class OpenAIHandler {
       });
 
       return JSON.parse(response.choices[0].message.content);
-    } catch (error) {
+    } catch (error: any) {
       throw new Error("Failed to process message: " + error.message);
     }
   }
