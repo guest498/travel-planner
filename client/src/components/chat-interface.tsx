@@ -18,7 +18,7 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: 'Hello! I\'m your AI travel assistant. Where would you like to travel?',
+      content: 'Hi! Where would you like to travel? I can help you find flight information.',
       timestamp: Date.now()
     }
   ]);
@@ -52,7 +52,6 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
       }
     },
     onError: (error: Error) => {
-      // Error is already shown in mutationFn
       console.error('Chat error:', error);
     }
   });
@@ -72,9 +71,11 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
   };
 
   return (
-    <Card className="h-[600px] flex flex-col">
-      <div className="p-4 border-b">
-        <h2 className="text-xl font-semibold">Travel Assistant</h2>
+    <Card className="h-[600px] flex flex-col bg-white/50 backdrop-blur-sm border-none shadow-lg">
+      <div className="p-4 border-b bg-primary/5">
+        <h2 className="text-xl font-semibold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+          Travel Assistant
+        </h2>
       </div>
 
       <ScrollArea className="flex-1 p-4">
@@ -85,10 +86,10 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[80%] rounded-lg p-3 ${
+                className={`max-w-[80%] rounded-lg p-3 transition-all duration-200 animate-in slide-in-from-bottom-2 ${
                   msg.role === 'user'
                     ? 'bg-primary text-primary-foreground ml-4'
-                    : 'bg-muted mr-4'
+                    : 'bg-muted/50 backdrop-blur-sm mr-4'
                 }`}
               >
                 {msg.content}
@@ -96,8 +97,8 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
             </div>
           ))}
           {chatMutation.isPending && (
-            <div className="flex justify-start">
-              <div className="bg-muted mr-4 max-w-[80%] rounded-lg p-3">
+            <div className="flex justify-start animate-pulse">
+              <div className="bg-muted/50 backdrop-blur-sm mr-4 max-w-[80%] rounded-lg p-3">
                 Thinking...
               </div>
             </div>
@@ -105,22 +106,31 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
         </div>
       </ScrollArea>
 
-      <div className="p-4 border-t">
-        <div className="flex gap-2">
+      <div className="p-4 border-t bg-white/50">
+        <form 
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSend();
+          }} 
+          className="flex gap-2"
+        >
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about your travel destination..."
+            placeholder="Where would you like to go?"
+            className="bg-white/50 border-primary/20 focus:border-primary/40"
             onKeyPress={(e) => e.key === 'Enter' && handleSend()}
             disabled={chatMutation.isPending}
           />
           <Button
-            onClick={handleSend}
+            type="submit"
+            variant="default"
+            className="bg-primary hover:bg-primary/90 transition-colors"
             disabled={chatMutation.isPending}
           >
             <Send className="h-4 w-4" />
           </Button>
-        </div>
+        </form>
       </div>
     </Card>
   );
