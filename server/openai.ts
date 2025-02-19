@@ -1,13 +1,12 @@
 import OpenAI from "openai";
 
-// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export class OpenAIHandler {
   async chat(message: string) {
     try {
       const response = await openai.chat.completions.create({
-        model: "gpt-4",  // Changed from gpt-4o as it seems to be causing issues
+        model: "gpt-3.5-turbo",  // Changed to GPT-3.5-turbo which is more widely available
         messages: [
           {
             role: "system",
