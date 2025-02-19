@@ -27,8 +27,19 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
 
   const chatMutation = useMutation({
     mutationFn: async (message: string) => {
-      const response = await apiRequest('POST', '/api/chat', { message });
-      return response.json();
+      try {
+        const response = await apiRequest('POST', '/api/chat', { message });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to send message');
+        }
+        return data;
+      } catch (error) {
+        if (error instanceof Error) {
+          throw new Error(error.message);
+        }
+        throw new Error('Failed to send message');
+      }
     },
     onSuccess: (data) => {
       setMessages(prev => [...prev, data.message]);
@@ -36,26 +47,26 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
         onLocationSelect(data.location);
       }
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: "Failed to send message. Please try again.",
+        description: error.message || "Failed to send message. Please try again.",
         variant: "destructive"
       });
     }
   });
 
   const handleSend = () => {
-    if (!input.trim()) return;
+    if (!input.trim() || chatMutation.isPending) return;
 
     const userMessage: Message = {
       role: 'user',
-      content: input,
+      content: input.trim(),
       timestamp: Date.now()
     };
 
     setMessages(prev => [...prev, userMessage]);
-    chatMutation.mutate(input);
+    chatMutation.mutate(input.trim());
     setInput('');
   };
 
@@ -83,6 +94,13 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
               </div>
             </div>
           ))}
+          {chatMutation.isPending && (
+            <div className="flex justify-start">
+              <div className="bg-muted mr-4 max-w-[80%] rounded-lg p-3">
+                Thinking...
+              </div>
+            </div>
+          )}
         </div>
       </ScrollArea>
 
