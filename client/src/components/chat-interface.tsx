@@ -31,14 +31,18 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
         const response = await apiRequest('POST', '/api/chat', { message });
         const data = await response.json();
         if (!response.ok) {
-          throw new Error(data.error || 'Failed to send message');
+          const errorMessage = data.error || 'Failed to send message';
+          toast({
+            title: "Error",
+            description: errorMessage,
+            variant: "destructive"
+          });
+          throw new Error(errorMessage);
         }
         return data;
       } catch (error) {
-        if (error instanceof Error) {
-          throw new Error(error.message);
-        }
-        throw new Error('Failed to send message');
+        const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
+        throw new Error(errorMessage);
       }
     },
     onSuccess: (data) => {
@@ -48,11 +52,8 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
       }
     },
     onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to send message. Please try again.",
-        variant: "destructive"
-      });
+      // Error is already shown in mutationFn
+      console.error('Chat error:', error);
     }
   });
 
