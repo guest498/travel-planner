@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -14,6 +15,7 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const markerRef = useRef<L.Marker | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
@@ -44,29 +46,40 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
   useEffect(() => {
     if (!location || !mapRef.current) return;
 
-    const apiKey = import.meta.env.VITE_OPENROUTE_API_KEY;
-
     // Clean up previous marker if it exists
     if (markerRef.current) {
       markerRef.current.remove();
       markerRef.current = null;
     }
 
-    // Use OpenRouteService Geocoding API
-    fetch(`https://api.openrouteservice.org/geocode/search?api_key=${apiKey}&text=${encodeURIComponent(location)}`)
+    // Use OpenStreetMap Nominatim instead of OpenRouteService
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}`)
       .then(res => res.json())
       .then(data => {
-        if (data.features && data.features.length > 0) {
-          const [lng, lat] = data.features[0].geometry.coordinates;
+        if (data && data.length > 0) {
+          const lat = parseFloat(data[0].lat);
+          const lng = parseFloat(data[0].lon);
+
           if (mapRef.current) {
             mapRef.current.setView([lat, lng], 12);
             markerRef.current = L.marker([lat, lng]).addTo(mapRef.current);
           }
           onCenterChange({ lat, lng });
+        } else {
+          toast({
+            title: "Location not found",
+            description: "Could not find the specified location on the map.",
+            variant: "destructive"
+          });
         }
       })
       .catch(error => {
         console.error('Geocoding error:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load location data. Please try again.",
+          variant: "destructive"
+        });
       });
   }, [location]);
 
