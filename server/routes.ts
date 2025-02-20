@@ -17,6 +17,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: z.string()
       }).parse(req.body);
 
+      // Check if the message is a greeting
+      const greetings = ['hello', 'hi', 'hey', 'hola', 'greetings'];
+      const isGreeting = greetings.some(greeting => 
+        message.toLowerCase().trim().startsWith(greeting)
+      );
+
+      if (isGreeting) {
+        res.json({
+          message: {
+            role: 'assistant',
+            content: 'Hello! I\'m your travel assistant. I can help you discover places to visit and find travel information. Where would you like to explore?',
+            timestamp: Date.now()
+          }
+        });
+        return;
+      }
+
       const response = await ai.chat(message);
       res.json(response);
     } catch (error: any) {
@@ -24,7 +41,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Favorites routes
   app.get('/api/favorites', async (req, res) => {
     try {
       const favorites = await storage.getFavorites();

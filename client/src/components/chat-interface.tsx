@@ -18,7 +18,7 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: 'Hi! Where would you like to travel? I can help you find flight information.',
+      content: "Hi! I'm your travel assistant. I can help you discover places to visit and find travel information. Where would you like to explore?",
       timestamp: Date.now()
     }
   ]);
@@ -53,6 +53,11 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
     },
     onError: (error: Error) => {
       console.error('Chat error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to get a response. Please try again.",
+        variant: "destructive"
+      });
     }
   });
 
@@ -119,7 +124,6 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
             onChange={(e) => setInput(e.target.value)}
             placeholder="Where would you like to go?"
             className="bg-white/50 border-primary/20 focus:border-primary/40"
-            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
             disabled={chatMutation.isPending}
           />
           <Button
