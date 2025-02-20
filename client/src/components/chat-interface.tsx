@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { apiRequest } from '@/lib/queryClient';
 import type { Message } from '@shared/schema';
 
 interface ChatInterfaceProps {
-  onLocationSelect: (location: string) => void;
+  onLocationSelect: (location: string, category?: string) => void;
 }
 
 export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) {
@@ -48,7 +48,7 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
     onSuccess: (data) => {
       setMessages(prev => [...prev, data.message]);
       if (data.location) {
-        onLocationSelect(data.location);
+        onLocationSelect(data.location, data.category);
       }
     },
     onError: (error: Error) => {

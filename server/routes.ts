@@ -3,7 +3,6 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { AIHandler } from "./ai-handler";
 import { z } from "zod";
-import { OpenAI } from "openai";
 import { insertFavoriteSchema } from "@shared/schema";
 
 const OPENROUTE_API_KEY = process.env.OPENROUTE_API_KEY || 'demo';
@@ -49,6 +48,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         });
         return;
+      }
+
+      // Handle nearby places queries
+      const nearbyKeywords = ['nearby', 'close', 'around', 'near', 'local', 'proximity'];
+      const placeTypes = {
+        education: ['school', 'university', 'college', 'institute', 'education'],
+        healthcare: ['hospital', 'clinic', 'medical', 'healthcare', 'doctor'],
+        tourism: ['tourist', 'attraction', 'sightseeing', 'monument', 'landmark', 'museum'],
+        dining: ['restaurant', 'cafe', 'food', 'eating', 'dining'],
+        shopping: ['shop', 'mall', 'store', 'market', 'shopping']
+      };
+
+      const isNearbyQuery = nearbyKeywords.some(keyword => 
+        message.toLowerCase().includes(keyword)
+      );
+
+      if (isNearbyQuery) {
+        let detectedType = '';
+        for (const [type, keywords] of Object.entries(placeTypes)) {
+          if (keywords.some(keyword => message.toLowerCase().includes(keyword))) {
+            detectedType = type;
+            break;
+          }
+        }
+
+        if (detectedType) {
+          const response = await ai.chat(
+            `You are a travel assistant. Please provide information about ${detectedType} places in the area. 
+             Include specific suggestions and brief descriptions. 
+             Keep the response focused and informative.`
+          );
+
+          // Add category information to the response
+          const enrichedResponse = {
+            ...response,
+            category: detectedType
+          };
+
+          res.json(enrichedResponse);
+          return;
+        }
       }
 
       // Handle budget-related queries

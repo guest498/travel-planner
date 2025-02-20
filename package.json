@@ -13,6 +13,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.3",
     "@googlemaps/js-api-loader": "^1.16.8",
+    "@googlemaps/places": "^1.9.1",
     "@hookform/resolvers": "^3.9.1",
     "@huggingface/inference": "^3.3.5",
     "@jridgewell/trace-mapping": "^0.3.25",

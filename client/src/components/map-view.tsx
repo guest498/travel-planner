@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
@@ -14,13 +14,14 @@ interface MapViewProps {
 export default function MapView({ center, onCenterChange, location }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const markerRef = useRef<L.Marker | null>(null);
+  const markersRef = useRef<L.LayerGroup | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
     mapRef.current = L.map(mapContainerRef.current).setView([center.lat, center.lng], 12);
+    markersRef.current = L.layerGroup().addTo(mapRef.current);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
@@ -43,16 +44,78 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
     };
   }, []);
 
+  const fetchNearbyPlaces = async (lat: number, lon: number, category: string) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?` +
+        `format=json&` +
+        `q=${category}&` +
+        `viewbox=${lon - 0.1},${lat - 0.1},${lon + 0.1},${lat + 0.1}&` +
+        `bounded=1&limit=10`
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch nearby places');
+      }
+
+      const places = await response.json();
+      return places;
+    } catch (error) {
+      console.error('Error fetching nearby places:', error);
+      throw error;
+    }
+  };
+
+  const showPlacesOnMap = async (category: string) => {
+    if (!mapRef.current || !markersRef.current) return;
+
+    try {
+      const center = mapRef.current.getCenter();
+      const places = await fetchNearbyPlaces(center.lat, center.lng, category);
+
+      // Clear existing markers
+      markersRef.current.clearLayers();
+
+      places.forEach((place: any) => {
+        const marker = L.marker([parseFloat(place.lat), parseFloat(place.lon)])
+          .bindPopup(`
+            <strong>${place.display_name.split(',')[0]}</strong><br>
+            ${place.type}: ${place.display_name}
+          `);
+        markersRef.current?.addLayer(marker);
+      });
+
+      // If places were found, notify the user
+      if (places.length > 0) {
+        toast({
+          title: "Places found",
+          description: `Found ${places.length} ${category} locations nearby.`,
+        });
+      } else {
+        toast({
+          title: "No places found",
+          description: `No ${category} locations found in this area.`,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch nearby places. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   useEffect(() => {
     if (!location || !mapRef.current) return;
 
-    // Clean up previous marker if it exists
-    if (markerRef.current) {
-      markerRef.current.remove();
-      markerRef.current = null;
+    // Clean up previous markers
+    if (markersRef.current) {
+      markersRef.current.clearLayers();
     }
 
-    // Use OpenStreetMap Nominatim instead of OpenRouteService
+    // Use OpenStreetMap Nominatim for geocoding
     fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}`)
       .then(res => res.json())
       .then(data => {
@@ -62,7 +125,9 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
 
           if (mapRef.current) {
             mapRef.current.setView([lat, lng], 12);
-            markerRef.current = L.marker([lat, lng]).addTo(mapRef.current);
+            const marker = L.marker([lat, lng])
+              .bindPopup(`<strong>${location}</strong>`)
+              .addTo(markersRef.current!);
           }
           onCenterChange({ lat, lng });
         } else {
