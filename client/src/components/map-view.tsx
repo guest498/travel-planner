@@ -48,14 +48,34 @@ export default function MapView({ center, onCenterChange, location, searchCatego
     };
   }, []);
 
+  const getCategoryQuery = (category: string): string => {
+    const categoryMappings: Record<string, string> = {
+      'education': '[amenity=university],[amenity=school],[amenity=college]',
+      'healthcare': '[amenity=hospital],[amenity=clinic],[amenity=doctors]',
+      'tourism': '[tourism=*]',
+      'dining': '[amenity=restaurant],[amenity=cafe],[amenity=fast_food]',
+      'shopping': '[shop=*]'
+    };
+    return categoryMappings[category.toLowerCase()] || category;
+  };
+
   const fetchNearbyPlaces = async (lat: number, lon: number, category: string) => {
     try {
+      // Increase the search radius by using a larger bounding box
+      const bbox = {
+        north: lat + 0.2,
+        south: lat - 0.2,
+        east: lon + 0.2,
+        west: lon - 0.2
+      };
+
+      const query = getCategoryQuery(category);
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?` +
         `format=json&` +
-        `q=${category}&` +
-        `viewbox=${lon - 0.1},${lat - 0.1},${lon + 0.1},${lat + 0.1}&` +
-        `bounded=1&limit=10`
+        `q=${encodeURIComponent(query)}&` +
+        `viewbox=${bbox.west},${bbox.south},${bbox.east},${bbox.north}&` +
+        `bounded=1&limit=20`
       );
 
       if (!response.ok) {
@@ -80,26 +100,48 @@ export default function MapView({ center, onCenterChange, location, searchCatego
       // Clear existing markers
       markersRef.current.clearLayers();
 
+      // Add the main location marker first
+      if (location) {
+        const mainMarker = L.marker([center.lat, center.lng])
+          .bindPopup(`<strong>${location}</strong>`)
+          .addTo(markersRef.current);
+      }
+
+      let placesFound = 0;
       places.forEach((place: any) => {
-        const marker = L.marker([parseFloat(place.lat), parseFloat(place.lon)])
-          .bindPopup(`
-            <strong>${place.display_name.split(',')[0]}</strong><br>
-            ${place.type}: ${place.display_name}
-          `);
-        markersRef.current?.addLayer(marker);
+        if (place.lat && place.lon) {
+          placesFound++;
+          const marker = L.marker([parseFloat(place.lat), parseFloat(place.lon)])
+            .bindPopup(`
+              <strong>${place.display_name.split(',')[0]}</strong><br>
+              ${place.type}: ${place.display_name}
+            `);
+          markersRef.current?.addLayer(marker);
+        }
       });
 
       // If places were found, notify the user
-      if (places.length > 0) {
+      if (placesFound > 0) {
         toast({
           title: "Places found",
-          description: `Found ${places.length} ${category} locations nearby.`,
+          description: `Found ${placesFound} ${category} locations nearby.`,
         });
       } else {
         toast({
-          title: "No places found",
-          description: `No ${category} locations found in this area.`,
-          variant: "destructive"
+          title: "Expanding search",
+          description: `Searching in a wider area for ${category} locations...`,
+        });
+        // Try again with a wider search area if no results
+        const widePlaces = await fetchNearbyPlaces(center.lat, center.lng, category);
+        widePlaces.forEach((place: any) => {
+          if (place.lat && place.lon) {
+            const marker = L.marker([parseFloat(place.lat), parseFloat(place.lon)])
+              .bindPopup(`
+                <strong>${place.display_name.split(',')[0]}</strong><br>
+                ${place.type}: ${place.display_name}
+              `);
+            markersRef.current?.addLayer(marker);
+          }
         });
       }
     } catch (error) {
