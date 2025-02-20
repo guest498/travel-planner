@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { AIHandler } from "./ai-handler";
 import { z } from "zod";
 import { OpenAI } from "openai";
+import { insertFavoriteSchema } from "@shared/schema";
 
 const OPENROUTE_API_KEY = process.env.OPENROUTE_API_KEY || 'demo';
 
@@ -20,6 +21,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(response);
     } catch (error: any) {
       res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Favorites routes
+  app.get('/api/favorites', async (req, res) => {
+    try {
+      const favorites = await storage.getFavorites();
+      res.json(favorites);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post('/api/favorites', async (req, res) => {
+    try {
+      const favorite = insertFavoriteSchema.parse(req.body);
+      const created = await storage.createFavorite(favorite);
+      res.json(created);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.delete('/api/favorites/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteFavorite(id);
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
     }
   });
 

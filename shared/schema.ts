@@ -16,6 +16,13 @@ export const weatherCache = pgTable("weather_cache", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const favorites = pgTable("favorites", {
+  id: serial("id").primaryKey(),
+  location: text("location").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertConversationSchema = createInsertSchema(conversations).omit({
   id: true,
   createdAt: true,
@@ -26,10 +33,17 @@ export const insertWeatherCacheSchema = createInsertSchema(weatherCache).omit({
   updatedAt: true,
 });
 
+export const insertFavoriteSchema = createInsertSchema(favorites).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type Conversation = typeof conversations.$inferSelect;
 export type InsertConversation = z.infer<typeof insertConversationSchema>;
 export type WeatherCache = typeof weatherCache.$inferSelect;
 export type InsertWeatherCache = z.infer<typeof insertWeatherCacheSchema>;
+export type Favorite = typeof favorites.$inferSelect;
+export type InsertFavorite = z.infer<typeof insertFavoriteSchema>;
 
 export type Message = {
   role: 'user' | 'assistant';
