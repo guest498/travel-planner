@@ -34,7 +34,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
       }
 
-      const response = await ai.chat(message);
+      // Handle thank you messages
+      const thankYouPhrases = ['thank you', 'thanks', 'thx', 'thank'];
+      const isThankYou = thankYouPhrases.some(phrase => 
+        message.toLowerCase().trim().includes(phrase)
+      );
+
+      if (isThankYou) {
+        res.json({
+          message: {
+            role: 'assistant',
+            content: 'You\'re welcome! Let me know if you need any other travel information or assistance.',
+            timestamp: Date.now()
+          }
+        });
+        return;
+      }
+
+      // Handle budget-related queries
+      const budgetKeywords = ['budget', 'cost', 'cheap', 'expensive', 'afford', 'price'];
+      const isBudgetQuery = budgetKeywords.some(keyword => 
+        message.toLowerCase().includes(keyword)
+      );
+
+      if (isBudgetQuery) {
+        const response = await ai.chat(
+          `You are a travel assistant. Please provide helpful budget travel advice for this query: ${message}. 
+           Include specific suggestions about destinations, accommodation, and activities within their budget range. 
+           Keep the response focused on practical travel advice.`
+        );
+        res.json(response);
+        return;
+      }
+
+      // Handle language and cultural queries
+      const culturalKeywords = ['language', 'culture', 'speak', 'tradition', 'custom'];
+      const isCulturalQuery = culturalKeywords.some(keyword => 
+        message.toLowerCase().includes(keyword)
+      );
+
+      if (isCulturalQuery) {
+        const response = await ai.chat(
+          `You are a travel assistant. Please provide accurate cultural and language information for this query: ${message}. 
+           Include specific details about languages spoken, cultural practices, and important customs. 
+           Keep the response informative and respectful.`
+        );
+        res.json(response);
+        return;
+      }
+
+      // Default case: handle as a general travel query
+      const response = await ai.chat(
+        `You are a travel assistant. Please provide helpful travel information for this query: ${message}. 
+         Include specific details about destinations, attractions, and practical travel tips. 
+         Keep the response focused on travel advice.`
+      );
       res.json(response);
     } catch (error: any) {
       res.status(400).json({ error: error.message });
