@@ -9,13 +9,15 @@ interface MapViewProps {
   center: { lat: number; lng: number };
   onCenterChange: (center: { lat: number; lng: number }) => void;
   location: string | null;
+  searchCategory: string | null;
 }
 
-export default function MapView({ center, onCenterChange, location }: MapViewProps) {
+export default function MapView({ center, onCenterChange, location, searchCategory }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
   const { toast } = useToast();
+  const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
@@ -35,6 +37,8 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
         lng: center.lng 
       });
     });
+
+    setMapReady(true);
 
     return () => {
       if (mapRef.current) {
@@ -107,6 +111,7 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
     }
   };
 
+  // Effect to handle location changes
   useEffect(() => {
     if (!location || !mapRef.current) return;
 
@@ -147,6 +152,13 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
         });
       });
   }, [location]);
+
+  // Effect to handle category changes
+  useEffect(() => {
+    if (mapReady && searchCategory && location) {
+      showPlacesOnMap(searchCategory);
+    }
+  }, [searchCategory, mapReady, location]);
 
   return (
     <div 

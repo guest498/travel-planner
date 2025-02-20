@@ -16,6 +16,7 @@ import Favorites from '@/components/favorites';
 export default function Home() {
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [mapCenter, setMapCenter] = useState({ lat: 0, lng: 0 });
+  const [searchCategory, setSearchCategory] = useState<string | null>(null);
   const { toast } = useToast();
 
   const addFavoriteMutation = useMutation({
@@ -38,8 +39,9 @@ export default function Home() {
           {/* Left column - Chat, Weather, and Favorites */}
           <div className="lg:col-span-1 space-y-4">
             <ChatInterface 
-              onLocationSelect={(location) => {
+              onLocationSelect={(location, category) => {
                 setSelectedLocation(location);
+                setSearchCategory(category || null);
               }}
             />
             {selectedLocation && (
@@ -71,6 +73,7 @@ export default function Home() {
                 center={mapCenter} 
                 onCenterChange={setMapCenter}
                 location={selectedLocation}
+                searchCategory={searchCategory}
               />
             </Card>
 
