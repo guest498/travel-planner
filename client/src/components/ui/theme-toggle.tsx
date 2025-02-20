@@ -1,5 +1,6 @@
 import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
+import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -8,9 +9,28 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Check } from "lucide-react"
 
 export function ThemeToggle() {
-  const { setTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  // useEffect only runs on the client, so now we can safely show the UI
+  useEffect(() => {
+    setMounted(true)
+    // Get saved theme from localStorage or default to system
+    const savedTheme = localStorage.getItem('theme') || 'system'
+    setTheme(savedTheme)
+  }, [setTheme])
+
+  const handleThemeChange = (newTheme: string) => {
+    setTheme(newTheme)
+    localStorage.setItem('theme', newTheme)
+  }
+
+  if (!mounted) {
+    return null
+  }
 
   return (
     <DropdownMenu>
@@ -22,14 +42,23 @@ export function ThemeToggle() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")}>
-          Light
+        <DropdownMenuItem onClick={() => handleThemeChange("light")}>
+          <div className="flex items-center justify-between w-full">
+            Light
+            {theme === 'light' && <Check className="w-4 h-4 ml-2" />}
+          </div>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>
-          Dark
+        <DropdownMenuItem onClick={() => handleThemeChange("dark")}>
+          <div className="flex items-center justify-between w-full">
+            Dark
+            {theme === 'dark' && <Check className="w-4 h-4 ml-2" />}
+          </div>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")}>
-          System
+        <DropdownMenuItem onClick={() => handleThemeChange("system")}>
+          <div className="flex items-center justify-between w-full">
+            System
+            {theme === 'system' && <Check className="w-4 h-4 ml-2" />}
+          </div>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
