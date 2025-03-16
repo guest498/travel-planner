@@ -115,6 +115,12 @@ export class MemStorage implements IStorage {
   }
 
   async createUser(user: InsertUser): Promise<User> {
+    // Check if username already exists
+    const existingUser = await this.getUserByUsername(user.username);
+    if (existingUser) {
+      throw new Error("Username already exists");
+    }
+
     const id = this.currentId++;
     const newUser: User = {
       id,

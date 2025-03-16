@@ -36,38 +36,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         category: null
       });
 
-      const greetings = ['hello', 'hi', 'hey', 'hola', 'greetings'];
-      const isGreeting = greetings.some(greeting =>
-        message.toLowerCase().trim().startsWith(greeting)
-      );
+      // Extract location information from the message
+      const locationMatch = message.match(/(?:in|at|near|around) ([\w\s,]+)(?:\s|$)/i);
+      const location = locationMatch ? locationMatch[1].trim() : null;
 
-      if (isGreeting) {
-        res.json({
-          message: {
-            role: 'assistant',
-            content: 'Hello! I\'m your travel assistant. I can help you discover places to visit and find travel information. Where would you like to explore?',
-            timestamp: Date.now()
-          }
+      if (location) {
+        // Update user history with the detected location
+        await storage.createUserHistory({
+          userId: req.user!.id,
+          searchQuery: message,
+          location: location,
+          category: null
         });
-        return;
       }
 
-      const thankYouPhrases = ['thank you', 'thanks', 'thx', 'thank'];
-      const isThankYou = thankYouPhrases.some(phrase =>
-        message.toLowerCase().trim().includes(phrase)
-      );
-
-      if (isThankYou) {
-        res.json({
-          message: {
-            role: 'assistant',
-            content: 'You\'re welcome! Let me know if you need any other travel information or assistance.',
-            timestamp: Date.now()
-          }
-        });
-        return;
-      }
-
+      // Handle different types of queries with location context
       const nearbyKeywords = ['nearby', 'close', 'around', 'near', 'local', 'proximity'];
       const placeTypes = {
         education: ['school', 'university', 'college', 'institute', 'education'],
@@ -81,68 +64,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message.toLowerCase().includes(keyword)
       );
 
-      if (isNearbyQuery) {
-        let detectedType = '';
-        for (const [type, keywords] of Object.entries(placeTypes)) {
-          if (keywords.some(keyword => message.toLowerCase().includes(keyword))) {
-            detectedType = type;
-            break;
-          }
-        }
-
-        if (detectedType) {
-          const response = await ai.chat(
-            `You are a travel assistant. Please provide information about ${detectedType} places in the area. 
-             Include specific suggestions and brief descriptions. 
-             Keep the response focused and informative.`
-          );
-
-          const enrichedResponse = {
-            ...response,
-            category: detectedType
-          };
-
-          res.json(enrichedResponse);
-          return;
+      let detectedType = '';
+      for (const [type, keywords] of Object.entries(placeTypes)) {
+        if (keywords.some(keyword => message.toLowerCase().includes(keyword))) {
+          detectedType = type;
+          break;
         }
       }
 
-      const budgetKeywords = ['budget', 'cost', 'cheap', 'expensive', 'afford', 'price'];
-      const isBudgetQuery = budgetKeywords.some(keyword =>
-        message.toLowerCase().includes(keyword)
-      );
-
-      if (isBudgetQuery) {
-        const response = await ai.chat(
-          `You are a travel assistant. Please provide helpful budget travel advice for this query: ${message}. 
-           Include specific suggestions about destinations, accommodation, and activities within their budget range. 
-           Keep the response focused on practical travel advice.`
-        );
-        res.json(response);
-        return;
+      // Craft a location-specific prompt
+      let aiPrompt = `You are a travel assistant. `;
+      if (location) {
+        aiPrompt += `Focus specifically on ${location}. `;
+      }
+      if (detectedType) {
+        aiPrompt += `Please provide detailed information about ${detectedType} places`;
+        aiPrompt += location ? ` in ${location}. ` : `. `;
+        aiPrompt += `Include specific suggestions and brief descriptions.`;
+      } else {
+        aiPrompt += `Please provide helpful travel information for this query: ${message}. `;
+        aiPrompt += `Include specific details about destinations, attractions, and practical travel tips.`;
       }
 
-      const culturalKeywords = ['language', 'culture', 'speak', 'tradition', 'custom'];
-      const isCulturalQuery = culturalKeywords.some(keyword =>
-        message.toLowerCase().includes(keyword)
-      );
+      const response = await ai.chat(aiPrompt);
 
-      if (isCulturalQuery) {
-        const response = await ai.chat(
-          `You are a travel assistant. Please provide accurate cultural and language information for this query: ${message}. 
-           Include specific details about languages spoken, cultural practices, and important customs. 
-           Keep the response informative and respectful.`
-        );
+      if (detectedType) {
+        const enrichedResponse = {
+          ...response,
+          category: detectedType,
+          location: location
+        };
+        res.json(enrichedResponse);
+      } else {
         res.json(response);
-        return;
       }
-
-      const response = await ai.chat(
-        `You are a travel assistant. Please provide helpful travel information for this query: ${message}. 
-         Include specific details about destinations, attractions, and practical travel tips. 
-         Keep the response focused on travel advice.`
-      );
-      res.json(response);
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
