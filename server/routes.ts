@@ -43,26 +43,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: z.string()
       }).parse(req.body);
 
-      // Track user history
+      // Extract location with better regex pattern
+      const locationPattern = /(?:in|at|near|around|about|for)\s+([\w\s,\-]+?)(?:\s|$|\?|\.)/i;
+      const locationMatch = message.match(locationPattern);
+      const location = locationMatch ? locationMatch[1].trim() : null;
+
+      // Track user history with improved location detection
       await storage.createUserHistory({
         userId: req.user!.id,
         searchQuery: message,
-        location: null,
+        location: location,
         category: null
       });
-
-      // Extract location information with improved regex
-      const locationMatch = message.match(/(?:in|at|near|around|about) ([\w\s,\-]+?)(?:\s|$)/i);
-      const location = locationMatch ? locationMatch[1].trim() : null;
-
-      if (location) {
-        await storage.createUserHistory({
-          userId: req.user!.id,
-          searchQuery: message,
-          location: location,
-          category: null
-        });
-      }
 
       const placeTypes = {
         education: ['school', 'university', 'college', 'institute', 'education', 'academy', 'campus'],
@@ -80,51 +72,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Enhanced AI prompt with stronger location emphasis
+      // Enhanced AI prompt with explicit location focus
       let aiPrompt = `You are a travel assistant. `;
-
       if (location) {
-        aiPrompt += `Provide specific information about ${location}. Your response must only focus on ${location} and nowhere else. `;
+        aiPrompt += `Your task is to ONLY provide information about ${location}. 
+                     DO NOT mention any other locations in your response. 
+                     Focus exclusively on ${location}. `;
 
         if (detectedType) {
-          aiPrompt += `The user wants to know about ${detectedType} places in ${location}. `;
-          aiPrompt += `List the most notable ${detectedType} establishments in ${location}. `;
-          aiPrompt += `Include brief descriptions, locations, and any special features. `;
+          aiPrompt += `Specifically describe ${detectedType} places in ${location}. 
+                      List the top 5 most notable ${detectedType} establishments, including:
+                      - Their exact locations within ${location}
+                      - What makes them special
+                      - Brief practical information (like opening hours if relevant)`;
         } else {
-          aiPrompt += `Describe the main attractions and points of interest in ${location}. `;
+          aiPrompt += `Describe the most important attractions and points of interest in ${location}.
+                      Include practical travel information and local highlights.`;
         }
-
-        aiPrompt += `Keep your response focused exclusively on ${location}.`;
       } else {
-        aiPrompt += `Please provide helpful travel information for this query: ${message}. `;
-        aiPrompt += `Include specific details about destinations, attractions, and practical travel tips.`;
+        aiPrompt += `Please help with this travel query: ${message}`;
       }
 
       const response = await ai.chat(aiPrompt);
 
+      // Fetch relevant images
       let images: string[] = [];
       if (location || detectedType) {
         const searchQuery = location ? 
-          (detectedType ? `${detectedType} in ${location}` : `${location} landmarks attractions`) :
+          (detectedType ? `${detectedType} in ${location}` : `${location} famous landmarks`) :
           `${detectedType} places`;
         images = await searchImages(searchQuery);
       }
 
-      if (detectedType) {
-        const enrichedResponse = {
-          ...response,
-          category: detectedType,
-          location: location,
-          images: images.length > 0 ? images : null
-        };
-        res.json(enrichedResponse);
-      } else {
-        res.json({
-          ...response,
-          images: images.length > 0 ? images : null
-        });
-      }
+      res.json({
+        message: response.message,
+        category: detectedType || null,
+        location: location,
+        images: images.length > 0 ? images : null
+      });
+
     } catch (error: any) {
+      console.error('Chat error:', error);
       res.status(400).json({ error: error.message });
     }
   });

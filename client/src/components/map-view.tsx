@@ -37,7 +37,7 @@ export default function MapView({ center, onCenterChange, location, searchCatego
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
-    mapRef.current = L.map(mapContainerRef.current).setView([center.lat, center.lng], 12);
+    mapRef.current = L.map(mapContainerRef.current).setView([center.lat, center.lng], 13);
     markersRef.current = L.layerGroup().addTo(mapRef.current);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -108,10 +108,10 @@ export default function MapView({ center, onCenterChange, location, searchCatego
   const fetchNearbyPlaces = async (lat: number, lon: number, category: string) => {
     try {
       const bbox = {
-        north: lat + 0.2,
-        south: lat - 0.2,
-        east: lon + 0.2,
-        west: lon - 0.2
+        north: lat + 0.1,
+        south: lat - 0.1,
+        east: lon + 0.1,
+        west: lon - 0.1
       };
 
       const query = getCategoryQuery(category);
@@ -237,21 +237,55 @@ export default function MapView({ center, onCenterChange, location, searchCatego
       markersRef.current.clearLayers();
     }
 
-    // Use OpenStreetMap Nominatim for geocoding
-    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}`)
-      .then(res => res.json())
-      .then(data => {
+    const geocodeLocation = async () => {
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}&limit=1`
+        );
+        const data = await response.json();
+
         if (data && data.length > 0) {
           const lat = parseFloat(data[0].lat);
           const lng = parseFloat(data[0].lon);
 
+          // Update map center and add location marker
           if (mapRef.current) {
-            mapRef.current.setView([lat, lng], 12);
-            const marker = L.marker([lat, lng])
-              .bindPopup(`<strong>${location}</strong>`)
+            mapRef.current.setView([lat, lng], 13);
+
+            // Add a main location marker
+            const locationIcon = L.divIcon({
+              className: 'main-location-marker',
+              html: `<div class="bg-primary text-white px-3 py-1 rounded-lg shadow-lg text-sm font-medium">${location}</div>`,
+              iconSize: [120, 30],
+              iconAnchor: [60, 30]
+            });
+
+            L.marker([lat, lng], { icon: locationIcon })
               .addTo(markersRef.current!);
+
+            onCenterChange({ lat, lng });
+
+            // If a category is selected, fetch and display nearby places
+            if (searchCategory) {
+              const places = await fetchNearbyPlaces(lat, lng, searchCategory);
+
+              for (const place of places) {
+                if (place.lat && place.lon) {
+                  const placeInfo = await fetchPlaceDetails(place);
+                  const placeIcon = L.divIcon({
+                    className: 'place-marker',
+                    html: `<div class="bg-white px-2 py-1 rounded shadow-lg text-sm">${placeInfo.name}</div>`,
+                    iconSize: [100, 24],
+                    iconAnchor: [50, 24]
+                  });
+
+                  L.marker([placeInfo.lat, placeInfo.lon], { icon: placeIcon })
+                    .bindPopup(createMarkerPopup(placeInfo))
+                    .addTo(markersRef.current!);
+                }
+              }
+            }
           }
-          onCenterChange({ lat, lng });
         } else {
           toast({
             title: "Location not found",
@@ -259,18 +293,19 @@ export default function MapView({ center, onCenterChange, location, searchCatego
             variant: "destructive"
           });
         }
-      })
-      .catch(error => {
+      } catch (error) {
         console.error('Geocoding error:', error);
         toast({
           title: "Error",
           description: "Failed to load location data. Please try again.",
           variant: "destructive"
         });
-      });
-  }, [location]);
+      }
+    };
 
-  // Effect to handle category changes
+    geocodeLocation();
+  }, [location, searchCategory]);
+
   useEffect(() => {
     if (mapReady && searchCategory && location) {
       showPlacesOnMap(searchCategory);
