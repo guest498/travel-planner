@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card } from "@/components/ui/card";
 import { Train, Plane } from 'lucide-react';
@@ -16,47 +16,33 @@ export default function TransportationPlanner({ location }: TransportationPlanne
     enabled: !!location
   });
 
-  const [map, setMap] = useState<L.Map | null>(null);
-
   useEffect(() => {
     // Initialize map
-    if (!map) {
-      const mapInstance = L.map('map').setView([51.505, -0.09], 13);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-      }).addTo(mapInstance);
-      setMap(mapInstance);
-    }
+    const map = L.map('transportation-map').setView([51.505, -0.09], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
 
-    // Add animated route when data is available
-    if (map && data) {
-      const route = [
-        [51.505, -0.09],
-        [51.51, -0.1]
-      ];
+    // Draw a simple route line
+    const routeCoordinates = [
+      [51.505, -0.09],
+      [51.51, -0.1]
+    ];
 
-      let i = 0;
-      const interval = setInterval(() => {
-        if (i >= route.length - 1) {
-          clearInterval(interval);
-          return;
-        }
+    L.polyline(routeCoordinates as L.LatLngExpression[], {
+      color: '#6366f1',
+      weight: 4,
+      opacity: 0.8
+    }).addTo(map);
 
-        L.polyline([route[i], route[i + 1]], {
-          color: '#6366f1',
-          weight: 4,
-          opacity: 0.8
-        }).addTo(map);
+    return () => {
+      map.remove();
+    };
+  }, [location]);
 
-        i++;
-      }, 1000);
-
-      return () => {
-        clearInterval(interval);
-        map.remove();
-      };
-    }
-  }, [map, data]);
+  if (isLoading) {
+    return <Card className="p-6 animate-pulse">Loading transportation options...</Card>;
+  }
 
   return (
     <Card className="p-6 animate-in slide-in-from-bottom-2 duration-500">
@@ -64,7 +50,7 @@ export default function TransportationPlanner({ location }: TransportationPlanne
         <h3 className="text-lg font-semibold">Transportation Options: {location}</h3>
       </div>
 
-      <div id="map" className="h-[400px] mb-4 rounded-lg overflow-hidden" />
+      <div id="transportation-map" className="h-[400px] mb-4 rounded-lg overflow-hidden" />
 
       {data && (
         <div className="space-y-4">
