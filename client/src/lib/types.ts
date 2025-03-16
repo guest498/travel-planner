@@ -29,18 +29,6 @@ export interface TransportationData {
   }>;
 }
 
-export interface SoundtrackData {
-  genres: string[];
-  mood: string;
-  recommendations: Array<{
-    title: string;
-    artist: string;
-    genre: string;
-    description: string;
-  }>;
-  culturalContext: string;
-}
-
 export interface ImageGenerationResponse {
   imageUrl: string;
 }
