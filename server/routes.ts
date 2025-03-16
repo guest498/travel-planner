@@ -43,6 +43,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: z.string()
       }).parse(req.body);
 
+      // Track user history
       await storage.createUserHistory({
         userId: req.user!.id,
         searchQuery: message,
@@ -50,7 +51,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         category: null
       });
 
-      const locationMatch = message.match(/(?:in|at|near|around) ([\w\s,]+)(?:\s|$)/i);
+      // Extract location information with improved regex
+      const locationMatch = message.match(/(?:in|at|near|around|about) ([\w\s,\-]+?)(?:\s|$)/i);
       const location = locationMatch ? locationMatch[1].trim() : null;
 
       if (location) {
@@ -62,10 +64,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const nearbyKeywords = ['nearby', 'close', 'around', 'near', 'local', 'proximity'];
       const placeTypes = {
-        education: ['school', 'university', 'college', 'institute', 'education'],
-        healthcare: ['hospital', 'clinic', 'medical', 'healthcare', 'doctor'],
+        education: ['school', 'university', 'college', 'institute', 'education', 'academy', 'campus'],
+        healthcare: ['hospital', 'clinic', 'medical', 'healthcare', 'doctor', 'health'],
         tourism: ['tourist', 'attraction', 'sightseeing', 'monument', 'landmark', 'museum'],
         dining: ['restaurant', 'cafe', 'food', 'eating', 'dining'],
         shopping: ['shop', 'mall', 'store', 'market', 'shopping']
@@ -79,14 +80,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      // Enhanced AI prompt with stronger location emphasis
       let aiPrompt = `You are a travel assistant. `;
+
       if (location) {
-        aiPrompt += `Focus specifically on ${location}. `;
-      }
-      if (detectedType) {
-        aiPrompt += `Please provide detailed information about ${detectedType} places`;
-        aiPrompt += location ? ` in ${location}. ` : `. `;
-        aiPrompt += `Include specific suggestions and brief descriptions.`;
+        aiPrompt += `Provide specific information about ${location}. Your response must only focus on ${location} and nowhere else. `;
+
+        if (detectedType) {
+          aiPrompt += `The user wants to know about ${detectedType} places in ${location}. `;
+          aiPrompt += `List the most notable ${detectedType} establishments in ${location}. `;
+          aiPrompt += `Include brief descriptions, locations, and any special features. `;
+        } else {
+          aiPrompt += `Describe the main attractions and points of interest in ${location}. `;
+        }
+
+        aiPrompt += `Keep your response focused exclusively on ${location}.`;
       } else {
         aiPrompt += `Please provide helpful travel information for this query: ${message}. `;
         aiPrompt += `Include specific details about destinations, attractions, and practical travel tips.`;
@@ -97,7 +105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let images: string[] = [];
       if (location || detectedType) {
         const searchQuery = location ? 
-          (detectedType ? `${detectedType} in ${location}` : `${location} attractions`) :
+          (detectedType ? `${detectedType} in ${location}` : `${location} landmarks attractions`) :
           `${detectedType} places`;
         images = await searchImages(searchQuery);
       }
