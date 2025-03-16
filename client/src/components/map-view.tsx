@@ -12,12 +12,27 @@ interface MapViewProps {
   searchCategory: string | null;
 }
 
+interface PlaceInfo {
+  name: string;
+  type: string;
+  address: string;
+  lat: number;
+  lon: number;
+  details?: {
+    opening_hours?: string;
+    phone?: string;
+    website?: string;
+    description?: string;
+  };
+}
+
 export default function MapView({ center, onCenterChange, location, searchCategory }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
   const { toast } = useToast();
   const [mapReady, setMapReady] = useState(false);
+  const [selectedPlace, setSelectedPlace] = useState<PlaceInfo | null>(null);
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
@@ -50,18 +65,35 @@ export default function MapView({ center, onCenterChange, location, searchCatego
 
   const getCategoryQuery = (category: string): string => {
     const categoryMappings: Record<string, string> = {
-      'education': '[amenity=university],[amenity=school],[amenity=college]',
-      'healthcare': '[amenity=hospital],[amenity=clinic],[amenity=doctors]',
-      'tourism': '[tourism=*]',
-      'dining': '[amenity=restaurant],[amenity=cafe],[amenity=fast_food]',
-      'shopping': '[shop=*]'
+      'education': '[amenity=university],[amenity=school],[amenity=college],[amenity=library]',
+      'healthcare': '[amenity=hospital],[amenity=clinic],[amenity=doctors],[amenity=pharmacy]',
+      'tourism': '[tourism=*],[historic=*],[amenity=place_of_worship]',
+      'dining': '[amenity=restaurant],[amenity=cafe],[amenity=fast_food],[amenity=bar]',
+      'shopping': '[shop=*]',
+      'entertainment': '[leisure=*],[amenity=cinema],[amenity=theatre]'
     };
     return categoryMappings[category.toLowerCase()] || category;
   };
 
+  const fetchPlaceDetails = async (place: any): Promise<PlaceInfo> => {
+    const details: PlaceInfo = {
+      name: place.display_name.split(',')[0],
+      type: place.type,
+      address: place.display_name,
+      lat: parseFloat(place.lat),
+      lon: parseFloat(place.lon),
+      details: {
+        opening_hours: place.tags?.opening_hours,
+        phone: place.tags?.phone,
+        website: place.tags?.website,
+        description: `${place.type} in ${place.display_name.split(',').slice(1, 3).join(', ')}`
+      }
+    };
+    return details;
+  };
+
   const fetchNearbyPlaces = async (lat: number, lon: number, category: string) => {
     try {
-      // Increase the search radius by using a larger bounding box
       const bbox = {
         north: lat + 0.2,
         south: lat - 0.2,
@@ -75,7 +107,7 @@ export default function MapView({ center, onCenterChange, location, searchCatego
         `format=json&` +
         `q=${encodeURIComponent(query)}&` +
         `viewbox=${bbox.west},${bbox.south},${bbox.east},${bbox.north}&` +
-        `bounded=1&limit=20`
+        `bounded=1&limit=20&addressdetails=1&extratags=1`
       );
 
       if (!response.ok) {
@@ -88,6 +120,21 @@ export default function MapView({ center, onCenterChange, location, searchCatego
       console.error('Error fetching nearby places:', error);
       throw error;
     }
+  };
+
+  const createMarkerPopup = (place: PlaceInfo) => {
+    const popupContent = `
+      <div class="p-2">
+        <h3 class="font-bold">${place.name}</h3>
+        <p class="text-sm text-muted-foreground">${place.type}</p>
+        <p class="text-sm">${place.address}</p>
+        ${place.details?.opening_hours ? `<p class="text-sm">Hours: ${place.details.opening_hours}</p>` : ''}
+        ${place.details?.phone ? `<p class="text-sm">Phone: ${place.details.phone}</p>` : ''}
+        ${place.details?.website ? `<p class="text-sm">Website: <a href="${place.details.website}" target="_blank" rel="noopener noreferrer">${place.details.website}</a></p>` : ''}
+        ${place.details?.description ? `<p class="text-sm">${place.details.description}</p>` : ''}
+      </div>
+    `;
+    return popupContent;
   };
 
   const showPlacesOnMap = async (category: string) => {
@@ -108,41 +155,36 @@ export default function MapView({ center, onCenterChange, location, searchCatego
       }
 
       let placesFound = 0;
-      places.forEach((place: any) => {
+      for (const place of places) {
         if (place.lat && place.lon) {
           placesFound++;
-          const marker = L.marker([parseFloat(place.lat), parseFloat(place.lon)])
-            .bindPopup(`
-              <strong>${place.display_name.split(',')[0]}</strong><br>
-              ${place.type}: ${place.display_name}
-            `);
+          const placeInfo = await fetchPlaceDetails(place);
+          const marker = L.marker([placeInfo.lat, placeInfo.lon])
+            .bindPopup(createMarkerPopup(placeInfo));
           markersRef.current?.addLayer(marker);
         }
-      });
+      }
 
-      // If places were found, notify the user
       if (placesFound > 0) {
         toast({
-          title: "Places found",
-          description: `Found ${placesFound} ${category} locations nearby.`,
+          title: `${placesFound} ${category} locations found`,
+          description: `Found ${placesFound} places nearby. Click on markers for details.`,
         });
       } else {
         toast({
           title: "Expanding search",
           description: `Searching in a wider area for ${category} locations...`,
         });
-        // Try again with a wider search area if no results
+        // Try again with a wider search area
         const widePlaces = await fetchNearbyPlaces(center.lat, center.lng, category);
-        widePlaces.forEach((place: any) => {
+        for (const place of widePlaces) {
           if (place.lat && place.lon) {
-            const marker = L.marker([parseFloat(place.lat), parseFloat(place.lon)])
-              .bindPopup(`
-                <strong>${place.display_name.split(',')[0]}</strong><br>
-                ${place.type}: ${place.display_name}
-              `);
+            const placeInfo = await fetchPlaceDetails(place);
+            const marker = L.marker([placeInfo.lat, placeInfo.lon])
+              .bindPopup(createMarkerPopup(placeInfo));
             markersRef.current?.addLayer(marker);
           }
-        });
+        }
       }
     } catch (error) {
       toast({
