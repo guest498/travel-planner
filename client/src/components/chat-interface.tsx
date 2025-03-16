@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import TransportationPlanner from './transportation-planner';
 
 interface ChatInterfaceProps {
   onLocationSelect: (location: string, category?: string) => void;
@@ -196,6 +197,7 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
         <div className="space-y-4 animate-in fade-in duration-700">
           <WeatherCard location={currentLocation} />
           <CulturalInfoCard location={currentLocation} />
+          <TransportationPlanner location={currentLocation} />
         </div>
       )}
     </div>
