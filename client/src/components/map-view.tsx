@@ -47,9 +47,9 @@ export default function MapView({ center, onCenterChange, location, searchCatego
     mapRef.current.on('moveend', () => {
       if (!mapRef.current) return;
       const center = mapRef.current.getCenter();
-      onCenterChange({ 
-        lat: center.lat, 
-        lng: center.lng 
+      onCenterChange({
+        lat: center.lat,
+        lng: center.lng
       });
     });
 
@@ -76,8 +76,21 @@ export default function MapView({ center, onCenterChange, location, searchCatego
   };
 
   const fetchPlaceDetails = async (place: any): Promise<PlaceInfo> => {
+    const nameParts = place.display_name.split(',');
+    const mainName = nameParts[0];
+    const area = nameParts.slice(1, 3).join(', ').trim();
+
+    let description = '';
+    if (place.type.toLowerCase().includes('education') ||
+      place.type.toLowerCase().includes('school') ||
+      place.type.toLowerCase().includes('university')) {
+      description = `Educational institution in ${area}`;
+    } else {
+      description = `${place.type} in ${area}`;
+    }
+
     const details: PlaceInfo = {
-      name: place.display_name.split(',')[0],
+      name: mainName,
       type: place.type,
       address: place.display_name,
       lat: parseFloat(place.lat),
@@ -86,7 +99,7 @@ export default function MapView({ center, onCenterChange, location, searchCatego
         opening_hours: place.tags?.opening_hours,
         phone: place.tags?.phone,
         website: place.tags?.website,
-        description: `${place.type} in ${place.display_name.split(',').slice(1, 3).join(', ')}`
+        description: description
       }
     };
     return details;
@@ -124,14 +137,16 @@ export default function MapView({ center, onCenterChange, location, searchCatego
 
   const createMarkerPopup = (place: PlaceInfo) => {
     const popupContent = `
-      <div class="p-2">
-        <h3 class="font-bold">${place.name}</h3>
-        <p class="text-sm text-muted-foreground">${place.type}</p>
-        <p class="text-sm">${place.address}</p>
-        ${place.details?.opening_hours ? `<p class="text-sm">Hours: ${place.details.opening_hours}</p>` : ''}
-        ${place.details?.phone ? `<p class="text-sm">Phone: ${place.details.phone}</p>` : ''}
-        ${place.details?.website ? `<p class="text-sm">Website: <a href="${place.details.website}" target="_blank" rel="noopener noreferrer">${place.details.website}</a></p>` : ''}
-        ${place.details?.description ? `<p class="text-sm">${place.details.description}</p>` : ''}
+      <div class="p-4 max-w-xs">
+        <h3 class="text-lg font-bold mb-1">${place.name}</h3>
+        <p class="text-sm font-medium text-primary mb-2">${place.type}</p>
+        <div class="space-y-2 text-sm">
+          <p class="text-muted-foreground">${place.details?.description || ''}</p>
+          ${place.details?.opening_hours ? `<p><strong>Hours:</strong> ${place.details.opening_hours}</p>` : ''}
+          ${place.details?.phone ? `<p><strong>Phone:</strong> ${place.details.phone}</p>` : ''}
+          ${place.details?.website ? `<p><strong>Website:</strong> <a href="${place.details.website}" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline">${place.details.website}</a></p>` : ''}
+          <p class="text-xs text-muted-foreground mt-2">${place.address}</p>
+        </div>
       </div>
     `;
     return popupContent;
@@ -149,9 +164,15 @@ export default function MapView({ center, onCenterChange, location, searchCatego
 
       // Add the main location marker first
       if (location) {
-        const mainMarker = L.marker([center.lat, center.lng])
-          .bindPopup(`<strong>${location}</strong>`)
-          .addTo(markersRef.current);
+        const mainMarker = L.marker([center.lat, center.lng], {
+          icon: L.divIcon({
+            className: 'main-location-marker',
+            html: `<div class="bg-primary text-white px-2 py-1 rounded-lg shadow-lg">${location}</div>`,
+            iconSize: [100, 40],
+            iconAnchor: [50, 40]
+          })
+        }).bindPopup(`<strong>${location}</strong>`);
+        mainMarker.addTo(markersRef.current);
       }
 
       let placesFound = 0;
@@ -159,8 +180,14 @@ export default function MapView({ center, onCenterChange, location, searchCatego
         if (place.lat && place.lon) {
           placesFound++;
           const placeInfo = await fetchPlaceDetails(place);
-          const marker = L.marker([placeInfo.lat, placeInfo.lon])
-            .bindPopup(createMarkerPopup(placeInfo));
+          const marker = L.marker([placeInfo.lat, placeInfo.lon], {
+            icon: L.divIcon({
+              className: 'place-marker',
+              html: `<div class="bg-white px-2 py-1 rounded shadow text-sm">${placeInfo.name}</div>`,
+              iconSize: [100, 30],
+              iconAnchor: [50, 30]
+            })
+          }).bindPopup(createMarkerPopup(placeInfo));
           markersRef.current?.addLayer(marker);
         }
       }
@@ -180,8 +207,14 @@ export default function MapView({ center, onCenterChange, location, searchCatego
         for (const place of widePlaces) {
           if (place.lat && place.lon) {
             const placeInfo = await fetchPlaceDetails(place);
-            const marker = L.marker([placeInfo.lat, placeInfo.lon])
-              .bindPopup(createMarkerPopup(placeInfo));
+            const marker = L.marker([placeInfo.lat, placeInfo.lon], {
+              icon: L.divIcon({
+                className: 'place-marker',
+                html: `<div class="bg-white px-2 py-1 rounded shadow text-sm">${placeInfo.name}</div>`,
+                iconSize: [100, 30],
+                iconAnchor: [50, 30]
+              })
+            }).bindPopup(createMarkerPopup(placeInfo));
             markersRef.current?.addLayer(marker);
           }
         }
@@ -245,9 +278,9 @@ export default function MapView({ center, onCenterChange, location, searchCatego
   }, [searchCategory, mapReady, location]);
 
   return (
-    <div 
-      ref={mapContainerRef} 
-      className="w-full h-full rounded-lg" 
+    <div
+      ref={mapContainerRef}
+      className="w-full h-full rounded-lg"
       style={{ minHeight: '400px' }}
     />
   );
