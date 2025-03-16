@@ -41,25 +41,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: z.string()
       }).parse(req.body);
 
-      // Simple direct city name match
-      const location = message.trim();
+      // Extract location from various message formats
+      let location = '';
+
+      // Check for "I want to visit X" pattern
+      const visitMatch = message.match(/(?:i want to visit|show me|tell me about)\s+([a-zA-Z\s]+)/i);
+      if (visitMatch) {
+        location = visitMatch[1].trim();
+      }
+      // Check for "in X" pattern
+      else {
+        const locationMatch = message.match(/(?:in|at|about)\s+([a-zA-Z\s]+)/i);
+        if (locationMatch) {
+          location = locationMatch[1].trim();
+        }
+      }
 
       // Track user history
       await storage.createUserHistory({
         userId: req.user!.id,
         searchQuery: message,
-        location: location,
+        location: location || null,
         category: null
       });
 
-      // Base prompt focusing exclusively on the requested location
-      let aiPrompt = `You are a travel assistant. Provide information ONLY about ${location}. DO NOT mention any other cities or locations.`;
+      // Craft the AI prompt
+      let aiPrompt = `You are a travel assistant. `;
+
+      if (location) {
+        aiPrompt += `Provide detailed information ONLY about ${location}. 
+                     Include key attractions, cultural highlights, and practical travel tips.
+                     DO NOT mention any other cities or locations.`;
+      } else {
+        aiPrompt += `Please help with this travel query: ${message}`;
+      }
 
       const response = await ai.chat(aiPrompt);
 
       res.json({
         message: response.message,
-        location: location
+        location: location || null
       });
 
     } catch (error: any) {
