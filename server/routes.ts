@@ -7,8 +7,6 @@ import { insertFavoriteSchema } from "@shared/schema";
 import { setupAuth } from "./auth";
 import fetch from 'node-fetch';
 
-const OPENROUTE_API_KEY = process.env.OPENROUTE_API_KEY || 'demo';
-
 function ensureAuthenticated(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
   if (req.isAuthenticated()) {
     return next();
@@ -43,20 +41,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: z.string()
       }).parse(req.body);
 
-      // Extract location with improved pattern matching
-      let location = null;
-
-      // First try to match direct city mentions
-      const directCityMatch = message.match(/^([a-zA-Z\s\-']+)$/);
-      if (directCityMatch) {
-        location = directCityMatch[1].trim();
-      } else {
-        // Then try to match cities in context
-        const contextMatch = message.match(/(?:in|at|about|show)\s+([a-zA-Z\s\-']+)(?:$|\s|\.|\?)/i);
-        if (contextMatch) {
-          location = contextMatch[1].trim();
-        }
-      }
+      // Simple direct city name match
+      const location = message.trim();
 
       // Track user history
       await storage.createUserHistory({
@@ -66,62 +52,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         category: null
       });
 
-      const placeTypes = {
-        education: ['school', 'university', 'college', 'institute', 'education', 'academy', 'campus'],
-        healthcare: ['hospital', 'clinic', 'medical', 'healthcare', 'doctor', 'health'],
-        tourism: ['tourist', 'attraction', 'sightseeing', 'monument', 'landmark', 'museum'],
-        dining: ['restaurant', 'cafe', 'food', 'eating', 'dining'],
-        shopping: ['shop', 'mall', 'store', 'market', 'shopping']
-      };
-
-      let detectedType = '';
-      for (const [type, keywords] of Object.entries(placeTypes)) {
-        if (keywords.some(keyword => message.toLowerCase().includes(keyword))) {
-          detectedType = type;
-          break;
-        }
-      }
-
-      // Enhanced prompt for city-specific responses
-      let aiPrompt = `You are a travel assistant. `;
-
-      if (location) {
-        aiPrompt += `Focus EXCLUSIVELY on ${location}. DO NOT mention any other cities or locations. `;
-
-        if (detectedType === 'education') {
-          aiPrompt += `List the top 5 most prestigious educational institutions in ${location}, including:
-                      - Full name and exact location within ${location}
-                      - Brief description of what they're known for
-                      - Any notable features or programs
-                      Keep responses focused only on ${location}'s educational institutions.`;
-        } else if (detectedType) {
-          aiPrompt += `Describe the best ${detectedType} locations in ${location}, including:
-                      - Names and exact locations
-                      - What makes them special
-                      - Practical information for visitors`;
-        } else {
-          aiPrompt += `Describe the main attractions and highlights of ${location}.`;
-        }
-      } else {
-        aiPrompt += `Please help with this travel query: ${message}`;
-      }
+      // Base prompt focusing exclusively on the requested location
+      let aiPrompt = `You are a travel assistant. Provide information ONLY about ${location}. DO NOT mention any other cities or locations.`;
 
       const response = await ai.chat(aiPrompt);
 
-      // Fetch images for the location
-      let images: string[] = [];
-      if (location) {
-        const searchQuery = detectedType ?
-          `${detectedType} ${location}` :
-          `${location} landmarks attractions`;
-        images = await searchImages(searchQuery);
-      }
-
       res.json({
         message: response.message,
-        category: detectedType || null,
-        location: location,
-        images: images.length > 0 ? images : null
+        location: location
       });
 
     } catch (error: any) {

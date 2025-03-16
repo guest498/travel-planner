@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Loader2, MapPin, Sun, Globe, Train } from "lucide-react";
+import { Send, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -47,26 +47,14 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
       }
     },
     onSuccess: (data) => {
-      const messageContent = data.images?.length 
-        ? `${data.message.content}\n\n[Images Available]` 
-        : data.message.content;
-
       setMessages(prev => [...prev, {
-        ...data.message,
-        content: messageContent
+        role: 'assistant',
+        content: data.message.content,
+        timestamp: Date.now()
       }]);
 
       if (data.location) {
         onLocationSelect(data.location, data.category);
-      }
-
-      // Display images in a separate message if available
-      if (data.images?.length) {
-        setMessages(prev => [...prev, {
-          role: 'assistant',
-          content: data.images!.map(url => `<img src="${url}" alt="Place" class="rounded-lg max-w-full h-auto my-2" />`).join('\n'),
-          timestamp: Date.now()
-        }]);
       }
     },
     onError: (error: Error) => {
@@ -93,20 +81,10 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
     setInput('');
   };
 
-  const getMessageIcon = (content: string) => {
-    if (content.toLowerCase().includes('weather')) return <Sun className="h-4 w-4" />;
-    if (content.toLowerCase().includes('location') || content.toLowerCase().includes('place')) return <MapPin className="h-4 w-4" />;
-    if (content.toLowerCase().includes('culture') || content.toLowerCase().includes('language')) return <Globe className="h-4 w-4" />;
-    if (content.toLowerCase().includes('transport') || content.toLowerCase().includes('travel')) return <Train className="h-4 w-4" />;
-    return null;
-  };
-
   return (
     <Card className="h-[600px] flex flex-col">
-      <div className="p-4 border-b bg-white">
-        <h2 className="text-xl font-semibold text-primary">
-          Travel Assistant
-        </h2>
+      <div className="p-4 border-b">
+        <h2 className="text-xl font-semibold">Travel Assistant</h2>
       </div>
 
       <ScrollArea className="flex-1 p-4">
@@ -123,16 +101,7 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
                     : 'bg-muted mr-4'
                 }`}
               >
-                <div className="flex items-start gap-2">
-                  {msg.role === 'assistant' && getMessageIcon(msg.content)}
-                  <div className="prose prose-sm">
-                    {msg.content.includes('<img') ? (
-                      <div dangerouslySetInnerHTML={{ __html: msg.content }} />
-                    ) : (
-                      msg.content
-                    )}
-                  </div>
-                </div>
+                {msg.content}
               </div>
             </div>
           ))}
@@ -149,7 +118,7 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
         </div>
       </ScrollArea>
 
-      <div className="p-4 border-t bg-white">
+      <div className="p-4 border-t">
         <form 
           onSubmit={(e) => {
             e.preventDefault();
