@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import type { Message } from '@shared/schema';
+import WeatherCard from './weather-card';
 
 interface ChatInterfaceProps {
   onLocationSelect: (location: string, category?: string) => void;
@@ -15,13 +16,13 @@ interface ChatInterfaceProps {
 
 interface ChatResponse {
   message: Message;
-  category?: string;
-  location?: string;
-  images?: string[];
+  location?: string | null;
+  category?: string | null;
 }
 
 export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) {
   const [input, setInput] = useState('');
+  const [currentLocation, setCurrentLocation] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -54,6 +55,7 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
       }]);
 
       if (data.location) {
+        setCurrentLocation(data.location);
         onLocationSelect(data.location, data.category);
       }
     },
@@ -82,67 +84,73 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
   };
 
   return (
-    <Card className="h-[600px] flex flex-col">
-      <div className="p-4 border-b">
-        <h2 className="text-xl font-semibold">Travel Assistant</h2>
-      </div>
+    <div className="flex flex-col gap-4">
+      <Card className="h-[600px] flex flex-col">
+        <div className="p-4 border-b">
+          <h2 className="text-xl font-semibold">Travel Assistant</h2>
+        </div>
 
-      <ScrollArea className="flex-1 p-4">
-        <div className="space-y-4">
-          {messages.map((msg, i) => (
-            <div
-              key={i}
-              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
+        <ScrollArea className="flex-1 p-4">
+          <div className="space-y-4">
+            {messages.map((msg, i) => (
               <div
-                className={`max-w-[80%] rounded-lg p-4 ${
-                  msg.role === 'user'
-                    ? 'bg-primary text-primary-foreground ml-4'
-                    : 'bg-muted mr-4'
-                }`}
+                key={i}
+                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                {msg.content}
-              </div>
-            </div>
-          ))}
-          {chatMutation.isPending && (
-            <div className="flex justify-start animate-pulse">
-              <div className="bg-muted mr-4 max-w-[80%] rounded-lg p-4">
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Finding the best recommendations for you...</span>
+                <div
+                  className={`max-w-[80%] rounded-lg p-4 ${
+                    msg.role === 'user'
+                      ? 'bg-primary text-primary-foreground ml-4'
+                      : 'bg-muted mr-4'
+                  }`}
+                >
+                  {msg.content}
                 </div>
               </div>
-            </div>
-          )}
-        </div>
-      </ScrollArea>
+            ))}
+            {chatMutation.isPending && (
+              <div className="flex justify-start animate-pulse">
+                <div className="bg-muted mr-4 max-w-[80%] rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Finding the best recommendations for you...</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
 
-      <div className="p-4 border-t">
-        <form 
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSend();
-          }} 
-          className="flex gap-2"
-        >
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Where would you like to go?"
-            className="flex-1"
-            disabled={chatMutation.isPending}
-          />
-          <Button
-            type="submit"
-            size="icon"
-            className="rounded-full w-10 h-10"
-            disabled={chatMutation.isPending}
+        <div className="p-4 border-t">
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSend();
+            }} 
+            className="flex gap-2"
           >
-            <Send className="h-4 w-4" />
-          </Button>
-        </form>
-      </div>
-    </Card>
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Where would you like to go?"
+              className="flex-1"
+              disabled={chatMutation.isPending}
+            />
+            <Button
+              type="submit"
+              size="icon"
+              className="rounded-full w-10 h-10"
+              disabled={chatMutation.isPending}
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </form>
+        </div>
+      </Card>
+
+      {currentLocation && (
+        <WeatherCard location={currentLocation} />
+      )}
+    </div>
   );
 }
