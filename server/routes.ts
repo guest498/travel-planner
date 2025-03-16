@@ -14,6 +14,20 @@ function ensureAuthenticated(req: Express.Request, res: Express.Response, next: 
   res.status(401).json({ message: "Authentication required" });
 }
 
+async function translateText(text: string, targetLang: string): Promise<string> {
+  if (targetLang === 'en') return text;
+
+  try {
+    const aiPrompt = `Translate the following travel information to ${targetLang}:\n\n${text}`;
+    const ai = new AIHandler();
+    const response = await ai.chat(aiPrompt);
+    return response.message.content;
+  } catch (error) {
+    console.error('Translation error:', error);
+    return text; // Fallback to original text if translation fails
+  }
+}
+
 async function searchImages(query: string): Promise<string[]> {
   try {
     const response = await fetch(
@@ -37,8 +51,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/chat', ensureAuthenticated, async (req, res) => {
     try {
-      const { message } = z.object({
-        message: z.string()
+      const { message, language } = z.object({
+        message: z.string(),
+        language: z.string().default('en')
       }).parse(req.body);
 
       // Extract location from various message formats
@@ -78,9 +93,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const response = await ai.chat(aiPrompt);
 
+      // Generate translations if needed
+      const translations: Record<string, string> = {
+        en: response.message.content
+      };
+
+      if (language !== 'en') {
+        translations[language] = await translateText(response.message.content, language);
+      }
+
       res.json({
         message: response.message,
-        location: location || null
+        location: location || null,
+        translations
       });
 
     } catch (error: any) {

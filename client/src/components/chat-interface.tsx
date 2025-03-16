@@ -3,12 +3,19 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, Globe } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import type { Message } from '@shared/schema';
 import WeatherCard from './weather-card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface ChatInterfaceProps {
   onLocationSelect: (location: string, category?: string) => void;
@@ -18,11 +25,24 @@ interface ChatResponse {
   message: Message;
   location?: string | null;
   category?: string | null;
+  translations?: Record<string, string>;
 }
+
+const SUPPORTED_LANGUAGES = {
+  'en': 'English',
+  'es': 'Spanish',
+  'fr': 'French',
+  'de': 'German',
+  'it': 'Italian',
+  'ja': '日本語',
+  'ko': '한국어',
+  'zh': '中文'
+};
 
 export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) {
   const [input, setInput] = useState('');
   const [currentLocation, setCurrentLocation] = useState<string | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -36,7 +56,10 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
   const chatMutation = useMutation({
     mutationFn: async (message: string): Promise<ChatResponse> => {
       try {
-        const response = await apiRequest('POST', '/api/chat', { message });
+        const response = await apiRequest('POST', '/api/chat', { 
+          message,
+          language: selectedLanguage 
+        });
         const data = await response.json();
         if (!response.ok) {
           throw new Error(data.error || 'Failed to send message');
@@ -50,7 +73,7 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
     onSuccess: (data) => {
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: data.message.content,
+        content: data.translations?.[selectedLanguage] || data.message.content,
         timestamp: Date.now()
       }]);
 
@@ -87,7 +110,27 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
     <div className="flex flex-col gap-4">
       <Card className="h-[600px] flex flex-col">
         <div className="p-4 border-b">
-          <h2 className="text-xl font-semibold">Travel Assistant</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Travel Assistant</h2>
+            <div className="flex items-center gap-2">
+              <Globe className="h-4 w-4" />
+              <Select
+                value={selectedLanguage}
+                onValueChange={setSelectedLanguage}
+              >
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Select language" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(SUPPORTED_LANGUAGES).map(([code, name]) => (
+                    <SelectItem key={code} value={code}>
+                      {name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
 
         <ScrollArea className="flex-1 p-4">
