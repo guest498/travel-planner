@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,13 @@ import type { Message } from '@shared/schema';
 
 interface ChatInterfaceProps {
   onLocationSelect: (location: string, category?: string) => void;
+}
+
+interface ChatResponse {
+  message: Message;
+  category?: string;
+  location?: string;
+  images?: string[];
 }
 
 export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) {
@@ -26,18 +33,12 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
   const { toast } = useToast();
 
   const chatMutation = useMutation({
-    mutationFn: async (message: string) => {
+    mutationFn: async (message: string): Promise<ChatResponse> => {
       try {
         const response = await apiRequest('POST', '/api/chat', { message });
         const data = await response.json();
         if (!response.ok) {
-          const errorMessage = data.error || 'Failed to send message';
-          toast({
-            title: "Error",
-            description: errorMessage,
-            variant: "destructive"
-          });
-          throw new Error(errorMessage);
+          throw new Error(data.error || 'Failed to send message');
         }
         return data;
       } catch (error) {
@@ -46,9 +47,26 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
       }
     },
     onSuccess: (data) => {
-      setMessages(prev => [...prev, data.message]);
+      const messageContent = data.images?.length 
+        ? `${data.message.content}\n\n[Images Available]` 
+        : data.message.content;
+
+      setMessages(prev => [...prev, {
+        ...data.message,
+        content: messageContent
+      }]);
+
       if (data.location) {
         onLocationSelect(data.location, data.category);
+      }
+
+      // Display images in a separate message if available
+      if (data.images?.length) {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: data.images!.map(url => `<img src="${url}" alt="Place" class="rounded-lg max-w-full h-auto my-2" />`).join('\n'),
+          timestamp: Date.now()
+        }]);
       }
     },
     onError: (error: Error) => {
@@ -97,7 +115,11 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
                     : 'bg-muted/50 backdrop-blur-sm mr-4'
                 }`}
               >
-                {msg.content}
+                {msg.content.includes('<img') ? (
+                  <div dangerouslySetInnerHTML={{ __html: msg.content }} />
+                ) : (
+                  msg.content
+                )}
               </div>
             </div>
           ))}

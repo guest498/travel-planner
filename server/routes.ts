@@ -5,6 +5,7 @@ import { AIHandler } from "./ai-handler";
 import { z } from "zod";
 import { insertFavoriteSchema } from "@shared/schema";
 import { setupAuth } from "./auth";
+import fetch from 'node-fetch';
 
 const OPENROUTE_API_KEY = process.env.OPENROUTE_API_KEY || 'demo';
 
@@ -15,20 +16,33 @@ function ensureAuthenticated(req: Express.Request, res: Express.Response, next: 
   res.status(401).json({ message: "Authentication required" });
 }
 
+async function searchImages(query: string): Promise<string[]> {
+  try {
+    const response = await fetch(
+      `https://source.unsplash.com/featured/?${encodeURIComponent(query)}`
+    );
+
+    if (response.ok) {
+      return [response.url];
+    }
+    return [];
+  } catch (error) {
+    console.error('Error fetching images:', error);
+    return [];
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Set up authentication first
   setupAuth(app);
 
   const ai = new AIHandler();
 
-  // Protected routes
   app.post('/api/chat', ensureAuthenticated, async (req, res) => {
     try {
       const { message } = z.object({
         message: z.string()
       }).parse(req.body);
 
-      // Track user history
       await storage.createUserHistory({
         userId: req.user!.id,
         searchQuery: message,
@@ -36,12 +50,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         category: null
       });
 
-      // Extract location information from the message
       const locationMatch = message.match(/(?:in|at|near|around) ([\w\s,]+)(?:\s|$)/i);
       const location = locationMatch ? locationMatch[1].trim() : null;
 
       if (location) {
-        // Update user history with the detected location
         await storage.createUserHistory({
           userId: req.user!.id,
           searchQuery: message,
@@ -50,7 +62,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Handle different types of queries with location context
       const nearbyKeywords = ['nearby', 'close', 'around', 'near', 'local', 'proximity'];
       const placeTypes = {
         education: ['school', 'university', 'college', 'institute', 'education'],
@@ -60,10 +71,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         shopping: ['shop', 'mall', 'store', 'market', 'shopping']
       };
 
-      const isNearbyQuery = nearbyKeywords.some(keyword =>
-        message.toLowerCase().includes(keyword)
-      );
-
       let detectedType = '';
       for (const [type, keywords] of Object.entries(placeTypes)) {
         if (keywords.some(keyword => message.toLowerCase().includes(keyword))) {
@@ -72,7 +79,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Craft a location-specific prompt
       let aiPrompt = `You are a travel assistant. `;
       if (location) {
         aiPrompt += `Focus specifically on ${location}. `;
@@ -88,15 +94,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const response = await ai.chat(aiPrompt);
 
+      let images: string[] = [];
+      if (location || detectedType) {
+        const searchQuery = location ? 
+          (detectedType ? `${detectedType} in ${location}` : `${location} attractions`) :
+          `${detectedType} places`;
+        images = await searchImages(searchQuery);
+      }
+
       if (detectedType) {
         const enrichedResponse = {
           ...response,
           category: detectedType,
-          location: location
+          location: location,
+          images: images.length > 0 ? images : null
         };
         res.json(enrichedResponse);
       } else {
-        res.json(response);
+        res.json({
+          ...response,
+          images: images.length > 0 ? images : null
+        });
       }
     } catch (error: any) {
       res.status(400).json({ error: error.message });
