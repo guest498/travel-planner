@@ -9,6 +9,7 @@ import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import type { Message } from '@shared/schema';
 import WeatherCard from './weather-card';
+import CulturalInfoCard from './cultural-info-card';
 import {
   Select,
   SelectContent,
@@ -56,9 +57,9 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
   const chatMutation = useMutation({
     mutationFn: async (message: string): Promise<ChatResponse> => {
       try {
-        const response = await apiRequest('POST', '/api/chat', { 
+        const response = await apiRequest('POST', '/api/chat', {
           message,
-          language: selectedLanguage 
+          language: selectedLanguage
         });
         const data = await response.json();
         if (!response.ok) {
@@ -165,11 +166,11 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
         </ScrollArea>
 
         <div className="p-4 border-t">
-          <form 
+          <form
             onSubmit={(e) => {
               e.preventDefault();
               handleSend();
-            }} 
+            }}
             className="flex gap-2"
           >
             <Input
@@ -192,7 +193,10 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
       </Card>
 
       {currentLocation && (
-        <WeatherCard location={currentLocation} />
+        <div className="space-y-4 animate-in fade-in duration-700">
+          <WeatherCard location={currentLocation} />
+          <CulturalInfoCard location={currentLocation} />
+        </div>
       )}
     </div>
   );
