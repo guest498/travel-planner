@@ -108,10 +108,10 @@ export default function MapView({ center, onCenterChange, location, searchCatego
   const fetchNearbyPlaces = async (lat: number, lon: number, category: string) => {
     try {
       const bbox = {
-        north: lat + 0.1,
-        south: lat - 0.1,
-        east: lon + 0.1,
-        west: lon - 0.1
+        north: lat + 0.05, // Reduced radius for more focused results
+        south: lat - 0.05,
+        east: lon + 0.05,
+        west: lon - 0.05
       };
 
       const query = getCategoryQuery(category);
@@ -120,7 +120,7 @@ export default function MapView({ center, onCenterChange, location, searchCatego
         `format=json&` +
         `q=${encodeURIComponent(query)}&` +
         `viewbox=${bbox.west},${bbox.south},${bbox.east},${bbox.north}&` +
-        `bounded=1&limit=20&addressdetails=1&extratags=1`
+        `bounded=1&limit=10&addressdetails=1&extratags=1`
       );
 
       if (!response.ok) {
@@ -157,67 +157,83 @@ export default function MapView({ center, onCenterChange, location, searchCatego
 
     try {
       const center = mapRef.current.getCenter();
-      const places = await fetchNearbyPlaces(center.lat, center.lng, category);
-
-      // Clear existing markers
       markersRef.current.clearLayers();
 
-      // Add the main location marker first
+      // Add main location marker with custom icon
       if (location) {
-        const mainMarker = L.marker([center.lat, center.lng], {
-          icon: L.divIcon({
-            className: 'main-location-marker',
-            html: `<div class="bg-primary text-white px-2 py-1 rounded-lg shadow-lg">${location}</div>`,
-            iconSize: [100, 40],
-            iconAnchor: [50, 40]
-          })
-        }).bindPopup(`<strong>${location}</strong>`);
-        mainMarker.addTo(markersRef.current);
+        const locationIcon = L.divIcon({
+          className: 'main-location-marker',
+          html: `<div class="bg-primary text-white px-3 py-2 rounded-lg shadow-lg text-base font-semibold">${location}</div>`,
+          iconSize: [150, 40],
+          iconAnchor: [75, 40]
+        });
+
+        L.marker([center.lat, center.lng], { icon: locationIcon })
+          .addTo(markersRef.current);
       }
 
+      // Fetch and display nearby places
+      const places = await fetchNearbyPlaces(center.lat, center.lng, category);
       let placesFound = 0;
+
       for (const place of places) {
         if (place.lat && place.lon) {
           placesFound++;
           const placeInfo = await fetchPlaceDetails(place);
-          const marker = L.marker([placeInfo.lat, placeInfo.lon], {
-            icon: L.divIcon({
-              className: 'place-marker',
-              html: `<div class="bg-white px-2 py-1 rounded shadow text-sm">${placeInfo.name}</div>`,
-              iconSize: [100, 30],
-              iconAnchor: [50, 30]
-            })
-          }).bindPopup(createMarkerPopup(placeInfo));
-          markersRef.current?.addLayer(marker);
+
+          // Create custom marker with place name
+          const markerIcon = L.divIcon({
+            className: 'place-marker',
+            html: `<div class="bg-white px-3 py-1 rounded-lg shadow-lg text-sm">
+                    <span class="font-medium">${placeInfo.name}</span>
+                  </div>`,
+            iconSize: [200, 30],
+            iconAnchor: [100, 15]
+          });
+
+          L.marker([placeInfo.lat, placeInfo.lon], { icon: markerIcon })
+            .bindPopup(createMarkerPopup(placeInfo))
+            .addTo(markersRef.current);
         }
       }
 
-      if (placesFound > 0) {
-        toast({
-          title: `${placesFound} ${category} locations found`,
-          description: `Found ${placesFound} places nearby. Click on markers for details.`,
-        });
-      } else {
+      if (placesFound === 0) {
         toast({
           title: "Expanding search",
           description: `Searching in a wider area for ${category} locations...`,
         });
-        // Try again with a wider search area
+
+        // Try with a wider search area
+        const bbox = {
+          north: center.lat + 0.1,
+          south: center.lat - 0.1,
+          east: center.lng + 0.1,
+          west: center.lng - 0.1
+        };
+
         const widePlaces = await fetchNearbyPlaces(center.lat, center.lng, category);
         for (const place of widePlaces) {
           if (place.lat && place.lon) {
             const placeInfo = await fetchPlaceDetails(place);
-            const marker = L.marker([placeInfo.lat, placeInfo.lon], {
-              icon: L.divIcon({
-                className: 'place-marker',
-                html: `<div class="bg-white px-2 py-1 rounded shadow text-sm">${placeInfo.name}</div>`,
-                iconSize: [100, 30],
-                iconAnchor: [50, 30]
-              })
-            }).bindPopup(createMarkerPopup(placeInfo));
-            markersRef.current?.addLayer(marker);
+            const markerIcon = L.divIcon({
+              className: 'place-marker',
+              html: `<div class="bg-white px-3 py-1 rounded-lg shadow-lg text-sm">
+                      <span class="font-medium">${placeInfo.name}</span>
+                    </div>`,
+              iconSize: [200, 30],
+              iconAnchor: [100, 15]
+            });
+
+            L.marker([placeInfo.lat, placeInfo.lon], { icon: markerIcon })
+              .bindPopup(createMarkerPopup(placeInfo))
+              .addTo(markersRef.current);
           }
         }
+      } else {
+        toast({
+          title: `${placesFound} ${category} locations found`,
+          description: `Found ${placesFound} places nearby. Click on markers for details.`,
+        });
       }
     } catch (error) {
       toast({

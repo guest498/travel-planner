@@ -43,12 +43,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: z.string()
       }).parse(req.body);
 
-      // Extract location with better regex pattern
-      const locationPattern = /(?:in|at|near|around|about|for)\s+([\w\s,\-]+?)(?:\s|$|\?|\.)/i;
-      const locationMatch = message.match(locationPattern);
+      // Enhanced location extraction for major cities
+      const cityPattern = /(?:in|at|near|about)\s+([\w\s\-']+?)(?:,\s*[\w\s]+)?(?:\s|$|\?|\.)/i;
+      const locationMatch = message.match(cityPattern);
       const location = locationMatch ? locationMatch[1].trim() : null;
 
-      // Track user history with improved location detection
+      // Track user history
       await storage.createUserHistory({
         userId: req.user!.id,
         searchQuery: message,
@@ -72,22 +72,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Enhanced AI prompt with explicit location focus
+      // Enhanced prompt for city-specific responses
       let aiPrompt = `You are a travel assistant. `;
-      if (location) {
-        aiPrompt += `Your task is to ONLY provide information about ${location}. 
-                     DO NOT mention any other locations in your response. 
-                     Focus exclusively on ${location}. `;
 
-        if (detectedType) {
-          aiPrompt += `Specifically describe ${detectedType} places in ${location}. 
-                      List the top 5 most notable ${detectedType} establishments, including:
-                      - Their exact locations within ${location}
+      if (location) {
+        aiPrompt += `Focus EXCLUSIVELY on ${location}. DO NOT mention any other cities or locations. `;
+
+        if (detectedType === 'education') {
+          aiPrompt += `List the top 5 most prestigious educational institutions in ${location}, including:
+                      - Full name and exact location within ${location}
+                      - Brief description of what they're known for
+                      - Any notable features or programs
+                      Keep responses focused only on ${location}'s educational institutions.`;
+        } else if (detectedType) {
+          aiPrompt += `Describe the best ${detectedType} locations in ${location}, including:
+                      - Names and exact locations
                       - What makes them special
-                      - Brief practical information (like opening hours if relevant)`;
+                      - Practical information for visitors`;
         } else {
-          aiPrompt += `Describe the most important attractions and points of interest in ${location}.
-                      Include practical travel information and local highlights.`;
+          aiPrompt += `Describe the main attractions and highlights of ${location}.`;
         }
       } else {
         aiPrompt += `Please help with this travel query: ${message}`;
@@ -95,12 +98,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const response = await ai.chat(aiPrompt);
 
-      // Fetch relevant images
+      // Fetch images for the location
       let images: string[] = [];
-      if (location || detectedType) {
-        const searchQuery = location ? 
-          (detectedType ? `${detectedType} in ${location}` : `${location} famous landmarks`) :
-          `${detectedType} places`;
+      if (location) {
+        const searchQuery = detectedType ?
+          `${detectedType} ${location}` :
+          `${location} landmarks attractions`;
         images = await searchImages(searchQuery);
       }
 
