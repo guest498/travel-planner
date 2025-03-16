@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send } from "lucide-react";
+import { Send, Loader2, MapPin, Sun, Globe, Train } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -93,6 +93,15 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
     setInput('');
   };
 
+  // Helper function to get message icon based on content
+  const getMessageIcon = (content: string) => {
+    if (content.toLowerCase().includes('weather')) return <Sun className="h-4 w-4" />;
+    if (content.toLowerCase().includes('location') || content.toLowerCase().includes('place')) return <MapPin className="h-4 w-4" />;
+    if (content.toLowerCase().includes('culture') || content.toLowerCase().includes('language')) return <Globe className="h-4 w-4" />;
+    if (content.toLowerCase().includes('transport') || content.toLowerCase().includes('travel')) return <Train className="h-4 w-4" />;
+    return null;
+  };
+
   return (
     <Card className="h-[600px] flex flex-col bg-white/50 backdrop-blur-sm border-none shadow-lg">
       <div className="p-4 border-b bg-primary/5">
@@ -115,18 +124,26 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
                     : 'bg-muted/50 backdrop-blur-sm mr-4'
                 }`}
               >
-                {msg.content.includes('<img') ? (
-                  <div dangerouslySetInnerHTML={{ __html: msg.content }} />
-                ) : (
-                  msg.content
-                )}
+                <div className="flex items-start gap-2">
+                  {msg.role === 'assistant' && getMessageIcon(msg.content)}
+                  <div>
+                    {msg.content.includes('<img') ? (
+                      <div dangerouslySetInnerHTML={{ __html: msg.content }} />
+                    ) : (
+                      msg.content
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           ))}
           {chatMutation.isPending && (
             <div className="flex justify-start animate-pulse">
               <div className="bg-muted/50 backdrop-blur-sm mr-4 max-w-[80%] rounded-lg p-3">
-                Thinking...
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Finding the best recommendations for you...</span>
+                </div>
               </div>
             </div>
           )}
