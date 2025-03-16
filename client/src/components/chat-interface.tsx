@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import SoundtrackCard from './soundtrack-card';
 
 interface ChatInterfaceProps {
   onLocationSelect: (location: string, category?: string) => void;
@@ -192,7 +193,10 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
       </Card>
 
       {currentLocation && (
-        <WeatherCard location={currentLocation} />
+        <>
+          <WeatherCard location={currentLocation} />
+          <SoundtrackCard location={currentLocation} />
+        </>
       )}
     </div>
   );
