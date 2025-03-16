@@ -4,21 +4,40 @@ import { storage } from "./storage";
 import { AIHandler } from "./ai-handler";
 import { z } from "zod";
 import { insertFavoriteSchema } from "@shared/schema";
+import { setupAuth } from "./auth";
 
 const OPENROUTE_API_KEY = process.env.OPENROUTE_API_KEY || 'demo';
 
+function ensureAuthenticated(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.status(401).json({ message: "Authentication required" });
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Set up authentication first
+  setupAuth(app);
+
   const ai = new AIHandler();
 
-  app.post('/api/chat', async (req, res) => {
+  // Protected routes
+  app.post('/api/chat', ensureAuthenticated, async (req, res) => {
     try {
       const { message } = z.object({
         message: z.string()
       }).parse(req.body);
 
-      // Check if the message is a greeting
+      // Track user history
+      await storage.createUserHistory({
+        userId: req.user!.id,
+        searchQuery: message,
+        location: null,
+        category: null
+      });
+
       const greetings = ['hello', 'hi', 'hey', 'hola', 'greetings'];
-      const isGreeting = greetings.some(greeting => 
+      const isGreeting = greetings.some(greeting =>
         message.toLowerCase().trim().startsWith(greeting)
       );
 
@@ -33,9 +52,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
       }
 
-      // Handle thank you messages
       const thankYouPhrases = ['thank you', 'thanks', 'thx', 'thank'];
-      const isThankYou = thankYouPhrases.some(phrase => 
+      const isThankYou = thankYouPhrases.some(phrase =>
         message.toLowerCase().trim().includes(phrase)
       );
 
@@ -50,7 +68,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
       }
 
-      // Handle nearby places queries
       const nearbyKeywords = ['nearby', 'close', 'around', 'near', 'local', 'proximity'];
       const placeTypes = {
         education: ['school', 'university', 'college', 'institute', 'education'],
@@ -60,7 +77,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         shopping: ['shop', 'mall', 'store', 'market', 'shopping']
       };
 
-      const isNearbyQuery = nearbyKeywords.some(keyword => 
+      const isNearbyQuery = nearbyKeywords.some(keyword =>
         message.toLowerCase().includes(keyword)
       );
 
@@ -80,7 +97,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
              Keep the response focused and informative.`
           );
 
-          // Add category information to the response
           const enrichedResponse = {
             ...response,
             category: detectedType
@@ -91,9 +107,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Handle budget-related queries
       const budgetKeywords = ['budget', 'cost', 'cheap', 'expensive', 'afford', 'price'];
-      const isBudgetQuery = budgetKeywords.some(keyword => 
+      const isBudgetQuery = budgetKeywords.some(keyword =>
         message.toLowerCase().includes(keyword)
       );
 
@@ -107,9 +122,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
       }
 
-      // Handle language and cultural queries
       const culturalKeywords = ['language', 'culture', 'speak', 'tradition', 'custom'];
-      const isCulturalQuery = culturalKeywords.some(keyword => 
+      const isCulturalQuery = culturalKeywords.some(keyword =>
         message.toLowerCase().includes(keyword)
       );
 
@@ -123,7 +137,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
       }
 
-      // Default case: handle as a general travel query
       const response = await ai.chat(
         `You are a travel assistant. Please provide helpful travel information for this query: ${message}. 
          Include specific details about destinations, attractions, and practical travel tips. 
@@ -135,18 +148,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/favorites', async (req, res) => {
+  app.get('/api/favorites', ensureAuthenticated, async (req, res) => {
     try {
-      const favorites = await storage.getFavorites();
+      const favorites = await storage.getFavoritesByUser(req.user!.id);
       res.json(favorites);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
   });
 
-  app.post('/api/favorites', async (req, res) => {
+  app.post('/api/favorites', ensureAuthenticated, async (req, res) => {
     try {
-      const favorite = insertFavoriteSchema.parse(req.body);
+      const favorite = insertFavoriteSchema.parse({
+        ...req.body,
+        userId: req.user!.id
+      });
       const created = await storage.createFavorite(favorite);
       res.json(created);
     } catch (error: any) {
@@ -154,9 +170,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/favorites/:id', async (req, res) => {
+  app.delete('/api/favorites/:id', ensureAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      const favorite = await storage.getFavorite(id);
+      if (!favorite || favorite.userId !== req.user!.id) {
+        return res.status(403).json({ error: "Not authorized" });
+      }
       await storage.deleteFavorite(id);
       res.status(204).send();
     } catch (error: any) {
@@ -167,7 +187,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/weather/:location', async (req, res) => {
     try {
       const location = req.params.location;
-      // Mock weather data for demo
       const weatherData = {
         temperature: Math.round(Math.random() * 30),
         condition: ['Clear', 'Cloudy', 'Rain', 'Snow'][Math.floor(Math.random() * 4)],
@@ -183,7 +202,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/cultural-info/:location', async (req, res) => {
     try {
       const location = req.params.location;
-      // Mock cultural data
       const culturalData = {
         languages: ['English', 'Local Language'],
         festivals: [
@@ -207,7 +225,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/transportation/:location', async (req, res) => {
     try {
       const location = req.params.location;
-      // Mock transportation data
       const transportationData = {
         flights: [
           {

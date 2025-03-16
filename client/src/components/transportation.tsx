@@ -8,8 +8,22 @@ interface TransportationProps {
   location: string;
 }
 
+interface TransportationItem {
+  airline?: string;
+  operator?: string;
+  departure: string;
+  arrival: string;
+  price: number;
+  duration: string;
+}
+
+interface TransportationData {
+  flights: TransportationItem[];
+  trains: TransportationItem[];
+}
+
 export default function Transportation({ location }: TransportationProps) {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading } = useQuery<TransportationData>({
     queryKey: ['/api/transportation', location],
     enabled: !!location
   });
@@ -38,7 +52,7 @@ export default function Transportation({ location }: TransportationProps) {
 
         <TabsContent value="flights">
           <div className="space-y-4">
-            {data.flights.map((flight: any, i: number) => (
+            {data.flights.map((flight, i) => (
               <Card key={i} className="p-4">
                 <div className="flex justify-between items-center">
                   <div>
@@ -61,7 +75,7 @@ export default function Transportation({ location }: TransportationProps) {
 
         <TabsContent value="trains">
           <div className="space-y-4">
-            {data.trains.map((train: any, i: number) => (
+            {data.trains.map((train, i) => (
               <Card key={i} className="p-4">
                 <div className="flex justify-between items-center">
                   <div>
