@@ -43,10 +43,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: z.string()
       }).parse(req.body);
 
-      // Enhanced location extraction for major cities
-      const cityPattern = /(?:in|at|near|about)\s+([\w\s\-']+?)(?:,\s*[\w\s]+)?(?:\s|$|\?|\.)/i;
-      const locationMatch = message.match(cityPattern);
-      const location = locationMatch ? locationMatch[1].trim() : null;
+      // Extract location with improved pattern matching
+      let location = null;
+
+      // First try to match direct city mentions
+      const directCityMatch = message.match(/^([a-zA-Z\s\-']+)$/);
+      if (directCityMatch) {
+        location = directCityMatch[1].trim();
+      } else {
+        // Then try to match cities in context
+        const contextMatch = message.match(/(?:in|at|about|show)\s+([a-zA-Z\s\-']+)(?:$|\s|\.|\?)/i);
+        if (contextMatch) {
+          location = contextMatch[1].trim();
+        }
+      }
 
       // Track user history
       await storage.createUserHistory({

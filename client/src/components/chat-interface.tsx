@@ -93,7 +93,6 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
     setInput('');
   };
 
-  // Helper function to get message icon based on content
   const getMessageIcon = (content: string) => {
     if (content.toLowerCase().includes('weather')) return <Sun className="h-4 w-4" />;
     if (content.toLowerCase().includes('location') || content.toLowerCase().includes('place')) return <MapPin className="h-4 w-4" />;
@@ -103,9 +102,9 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
   };
 
   return (
-    <Card className="h-[600px] flex flex-col bg-gradient-to-br from-white/90 to-white/50 backdrop-blur-lg border-none shadow-xl rounded-xl overflow-hidden">
-      <div className="p-4 border-b bg-white/10 backdrop-blur-sm">
-        <h2 className="text-xl font-semibold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+    <Card className="h-[600px] flex flex-col">
+      <div className="p-4 border-b bg-white">
+        <h2 className="text-xl font-semibold text-primary">
           Travel Assistant
         </h2>
       </div>
@@ -118,10 +117,10 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[80%] rounded-2xl p-4 shadow-sm transition-all duration-200 animate-in slide-in-from-bottom-2 ${
+                className={`max-w-[80%] rounded-lg p-4 ${
                   msg.role === 'user'
                     ? 'bg-primary text-primary-foreground ml-4'
-                    : 'bg-white/80 backdrop-blur-sm mr-4'
+                    : 'bg-muted mr-4'
                 }`}
               >
                 <div className="flex items-start gap-2">
@@ -139,7 +138,7 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
           ))}
           {chatMutation.isPending && (
             <div className="flex justify-start animate-pulse">
-              <div className="bg-white/80 backdrop-blur-sm mr-4 max-w-[80%] rounded-2xl p-4 shadow-sm">
+              <div className="bg-muted mr-4 max-w-[80%] rounded-lg p-4">
                 <div className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   <span>Finding the best recommendations for you...</span>
@@ -150,7 +149,7 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
         </div>
       </ScrollArea>
 
-      <div className="p-4 border-t bg-white/10 backdrop-blur-sm">
+      <div className="p-4 border-t bg-white">
         <form 
           onSubmit={(e) => {
             e.preventDefault();
@@ -162,17 +161,16 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Where would you like to go?"
-            className="bg-white/50 border-primary/20 focus:border-primary/40 rounded-xl"
+            className="flex-1"
             disabled={chatMutation.isPending}
           />
           <Button
             type="submit"
-            variant="default"
             size="icon"
-            className="bg-primary hover:bg-primary/90 transition-colors rounded-xl w-12 h-12 flex-shrink-0"
+            className="rounded-full w-10 h-10"
             disabled={chatMutation.isPending}
           >
-            <Send className="h-5 w-5" />
+            <Send className="h-4 w-4" />
           </Button>
         </form>
       </div>
