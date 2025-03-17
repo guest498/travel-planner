@@ -15,7 +15,6 @@ import Favorites from '@/components/favorites';
 
 export default function Home() {
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
-  const [mapCenter, setMapCenter] = useState({ lat: 0, lng: 0 });
   const [searchCategory, setSearchCategory] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -50,7 +49,7 @@ export default function Home() {
             <Favorites onSelect={setSelectedLocation} />
           </div>
 
-          {/* Center and right - Map and Info */}
+          {/* Center and right - Location Info */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex justify-between items-center mb-4">
               {selectedLocation && (
@@ -68,13 +67,8 @@ export default function Home() {
               )}
             </div>
 
-            <Card className="p-4 h-[500px]">
-              <MapView 
-                center={mapCenter} 
-                onCenterChange={setMapCenter}
-                location={selectedLocation}
-                searchCategory={searchCategory}
-              />
+            <Card className="p-4">
+              <MapView location={selectedLocation} />
             </Card>
 
             {selectedLocation && (
