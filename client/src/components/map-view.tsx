@@ -134,10 +134,11 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
               const poiLng = parseFloat(poi.lon);
               const name = poi.display_name.split(',')[0];
 
+              // Create a clickable marker with the category icon and name
               const poiMarker = L.marker([poiLat, poiLng], {
                 icon: L.divIcon({
                   className: 'poi-marker',
-                  html: `<div class="px-3 py-1 rounded-lg shadow-lg text-sm font-medium" 
+                  html: `<div class="cursor-pointer px-3 py-1 rounded-lg shadow-lg text-sm font-medium" 
                          style="background-color: ${config.color}; color: white;">
                           ${config.icon} ${name}
                         </div>`,
@@ -146,11 +147,16 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
                 })
               });
 
+              // Create detailed popup content for POI
               const popupContent = `
-                <div class="p-3">
-                  <h4 class="font-bold text-base mb-1">${name}</h4>
-                  <p class="text-sm text-muted-foreground capitalize">${category}</p>
-                  <p class="text-sm mt-2">${poi.display_name}</p>
+                <div class="p-4 max-w-xs">
+                  <h4 class="font-bold text-lg mb-2">${name}</h4>
+                  <div class="space-y-2">
+                    <p class="flex items-center gap-2 text-sm font-medium" style="color: ${config.color}">
+                      ${config.icon} ${category.charAt(0).toUpperCase() + category.slice(1)}
+                    </p>
+                    <p class="text-sm">${poi.display_name}</p>
+                  </div>
                 </div>
               `;
 
@@ -159,19 +165,40 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
             });
           });
 
+          // Create category legend
+          const legend = L.control({ position: 'topright' });
+          legend.onAdd = () => {
+            const div = L.DomUtil.create('div', 'map-legend');
+            div.innerHTML = `
+              <div class="bg-white p-3 rounded-lg shadow-lg">
+                <h4 class="font-bold mb-2">Points of Interest</h4>
+                ${Object.entries(CATEGORIES).map(([category, config]) => `
+                  <div class="flex items-center gap-2 mb-1">
+                    <span style="color: ${config.color}">${config.icon}</span>
+                    <span class="text-sm">${category.charAt(0).toUpperCase() + category.slice(1)}</span>
+                  </div>
+                `).join('')}
+              </div>
+            `;
+            return div;
+          };
+          legend.addTo(mapRef.current);
+
           // Create summary popup for main marker
           const summaryContent = `
             <div class="p-4 max-w-xs">
-              <h3 class="text-lg font-bold mb-2">${location}</h3>
-              <div class="space-y-3">
+              <h3 class="text-lg font-bold mb-3">${location}</h3>
+              <div class="space-y-4">
                 ${Object.entries(allPOIs).map(([category, pois]) => `
                   <div>
-                    <p class="font-medium text-primary flex items-center gap-1">
+                    <p class="font-medium text-base flex items-center gap-2" style="color: ${CATEGORIES[category].color}">
                       ${CATEGORIES[category].icon} ${category.charAt(0).toUpperCase() + category.slice(1)}
                     </p>
-                    <ul class="list-disc pl-4 space-y-1">
+                    <ul class="list-disc pl-4 space-y-1 mt-1">
                       ${pois.slice(0, 3).map((poi: any) => `
-                        <li class="text-sm">${poi.display_name.split(',')[0]}</li>
+                        <li class="text-sm hover:text-primary cursor-pointer">
+                          ${poi.display_name.split(',')[0]}
+                        </li>
                       `).join('')}
                     </ul>
                   </div>
