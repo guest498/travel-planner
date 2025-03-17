@@ -31,18 +31,18 @@ export default function Home() {
     },
   });
 
+  const handleLocationSelect = (location: string, category?: string) => {
+    setSelectedLocation(location);
+    setSearchCategory(category || null);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto p-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Left column - Chat, Weather, and Favorites */}
           <div className="lg:col-span-1 space-y-4">
-            <ChatInterface 
-              onLocationSelect={(location, category) => {
-                setSelectedLocation(location);
-                setSearchCategory(category || null);
-              }}
-            />
+            <ChatInterface onLocationSelect={handleLocationSelect} />
             {selectedLocation && (
               <WeatherCard location={selectedLocation} />
             )}
@@ -59,7 +59,7 @@ export default function Home() {
                     variant="ghost"
                     size="icon"
                     className="ml-2"
-                    onClick={() => addFavoriteMutation.mutate(selectedLocation)}
+                    onClick={() => selectedLocation && addFavoriteMutation.mutate(selectedLocation)}
                   >
                     <Heart className="h-5 w-5" />
                   </Button>
