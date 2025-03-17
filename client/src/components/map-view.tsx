@@ -10,16 +10,17 @@ interface MapViewProps {
   location: string | null;
 }
 
+interface LocationInfo {
+  name: string;
+  location: string;
+}
+
 interface CategoryConfig {
   color: string;
   icon: string;
-  locations: Array<{
-    name: string;
-    description: string;
-  }>;
+  locations: LocationInfo[];
 }
 
-// Predefined locations for each category based on the location
 const getLocationData = (location: string): Record<string, CategoryConfig> => ({
   education: {
     color: '#4CAF50',
@@ -27,15 +28,15 @@ const getLocationData = (location: string): Record<string, CategoryConfig> => ({
     locations: [
       {
         name: 'Columbia University',
-        description: 'Prestigious research university in Manhattan\'s Morningside Heights'
+        location: 'Morningside Heights, Manhattan, New York'
       },
       {
         name: 'New York University (NYU)',
-        description: 'Private university centered in Greenwich Village'
+        location: 'Greenwich Village, Manhattan, New York'
       },
       {
         name: 'The Juilliard School',
-        description: 'World-renowned performing arts conservatory at Lincoln Center'
+        location: 'Lincoln Center, Manhattan, New York'
       }
     ]
   },
@@ -45,15 +46,15 @@ const getLocationData = (location: string): Record<string, CategoryConfig> => ({
     locations: [
       {
         name: 'NewYork-Presbyterian Hospital',
-        description: 'Leading academic medical center in Manhattan'
+        location: 'East 68th Street, Manhattan, New York'
       },
       {
         name: 'Mount Sinai Hospital',
-        description: 'Historic teaching hospital on the Upper East Side'
+        location: 'Upper East Side, Manhattan, New York'
       },
       {
         name: 'NYC Health + Hospitals/Bellevue',
-        description: 'Oldest public hospital in America, located in Kips Bay'
+        location: 'First Avenue, Kips Bay, Manhattan'
       }
     ]
   },
@@ -63,15 +64,15 @@ const getLocationData = (location: string): Record<string, CategoryConfig> => ({
     locations: [
       {
         name: 'Empire State Building',
-        description: 'Iconic 102-story Art Deco skyscraper in Midtown Manhattan'
+        location: '350 Fifth Avenue, Midtown Manhattan, New York'
       },
       {
         name: 'Metropolitan Museum of Art',
-        description: 'World-class art museum on Museum Mile, Central Park'
+        location: '1000 Fifth Avenue, Museum Mile, Manhattan'
       },
       {
         name: 'Times Square',
-        description: 'Major commercial intersection and entertainment center in Midtown'
+        location: 'Broadway and 7th Avenue, Midtown Manhattan'
       }
     ]
   }
@@ -121,7 +122,7 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
 
           mapRef.current?.setView([lat, lng], 13);
 
-          // Add main location marker
+          // Add location marker
           const mainMarker = L.marker([lat, lng], {
             icon: L.divIcon({
               className: 'location-marker',
@@ -133,7 +134,7 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
             })
           }).addTo(mapRef.current);
 
-          // Create category control menu
+          // Add category menu control
           const categoryControl = L.control({ position: 'topright' });
           categoryControl.onAdd = () => {
             const div = L.DomUtil.create('div', 'category-menu');
@@ -164,14 +165,15 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
               .setLatLng([lat, lng])
               .setContent(`
                 <div class="p-4 max-w-xs">
-                  <h4 class="font-bold text-lg mb-2" style="color: ${config.color}">
+                  <h4 class="font-bold text-lg mb-3" style="color: ${config.color}">
                     ${config.icon} ${category.charAt(0).toUpperCase() + category.slice(1)} Locations
                   </h4>
                   <div class="space-y-4">
                     ${config.locations.map(loc => `
-                      <div>
-                        <h5 class="font-medium text-sm">${loc.name}</h5>
-                        <p class="text-xs text-muted-foreground">${loc.description}</p>
+                      <div class="border-b pb-3">
+                        <p class="text-sm mb-1"><strong>Place:</strong> ${location}</p>
+                        <p class="text-sm mb-1"><strong>Name:</strong> ${loc.name}</p>
+                        <p class="text-sm"><strong>Location:</strong> ${loc.location}</p>
                       </div>
                     `).join('')}
                   </div>
