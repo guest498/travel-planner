@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import L from 'leaflet';
@@ -37,9 +37,7 @@ const CATEGORIES: Record<string, CategoryConfig> = {
 export default function MapView({ center, onCenterChange, location }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const markersRef = useRef<Record<string, L.LayerGroup>>({});
   const { toast } = useToast();
-  const [visibleCategories, setVisibleCategories] = useState<Set<string>>(new Set(Object.keys(CATEGORIES)));
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
@@ -50,11 +48,6 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(mapRef.current);
-
-    // Initialize layer groups for each category
-    Object.keys(CATEGORIES).forEach(category => {
-      markersRef.current[category] = L.layerGroup().addTo(mapRef.current!);
-    });
 
     // Handle map movement
     mapRef.current.on('moveend', () => {
@@ -95,9 +88,6 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
   useEffect(() => {
     if (!location || !mapRef.current) return;
 
-    // Clear existing markers
-    Object.values(markersRef.current).forEach(layer => layer.clearLayers());
-
     const geocodeLocation = async () => {
       try {
         const response = await fetch(
@@ -124,63 +114,17 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
             })
           }).addTo(mapRef.current);
 
-          // Fetch POIs for all categories
-          for (const [category, config] of Object.entries(CATEGORIES)) {
-            const pois = await fetchPOIs(lat, lng, category, config);
-
-            // Add markers for each POI in this category
-            pois.forEach((poi: any) => {
-              const poiLat = parseFloat(poi.lat);
-              const poiLng = parseFloat(poi.lon);
-              const name = poi.display_name.split(',')[0];
-
-              const poiMarker = L.marker([poiLat, poiLng], {
-                icon: L.divIcon({
-                  className: 'poi-marker',
-                  html: `<div class="cursor-pointer px-3 py-1 rounded-lg shadow-lg text-sm font-medium" 
-                         style="background-color: ${config.color}; color: white;">
-                          ${config.icon} ${name}
-                        </div>`,
-                  iconSize: [200, 30],
-                  iconAnchor: [100, 30]
-                })
-              });
-
-              const popupContent = `
-                <div class="p-4 max-w-xs">
-                  <h4 class="font-bold text-lg mb-2">${name}</h4>
-                  <div class="space-y-2">
-                    <p class="flex items-center gap-2 text-sm font-medium" style="color: ${config.color}">
-                      ${config.icon} ${category.charAt(0).toUpperCase() + category.slice(1)}
-                    </p>
-                    <p class="text-sm">${poi.display_name}</p>
-                  </div>
-                </div>
-              `;
-
-              poiMarker.bindPopup(popupContent);
-              poiMarker.addTo(markersRef.current[category]);
-
-              // Initially hide markers if category is not visible
-              if (!visibleCategories.has(category)) {
-                mapRef.current?.removeLayer(markersRef.current[category]);
-              }
-            });
-          }
-
-          // Add category menu control
-          const categoryMenuControl = L.control({ position: 'topright' });
-          categoryMenuControl.onAdd = () => {
+          // Create category control menu
+          const categoryControl = L.control({ position: 'topright' });
+          categoryControl.onAdd = () => {
             const div = L.DomUtil.create('div', 'category-menu');
             div.innerHTML = `
               <div class="bg-white p-4 rounded-lg shadow-lg min-w-[200px]">
                 <h4 class="font-bold mb-3">What would you like to see?</h4>
                 ${Object.entries(CATEGORIES).map(([category, config]) => `
                   <button
-                    onclick="window.toggleCategory('${category}')"
-                    class="flex items-center gap-2 w-full p-2 mb-2 rounded transition-colors ${
-                      visibleCategories.has(category) ? 'bg-gray-100' : ''
-                    }"
+                    onclick="window.showCategoryInfo('${category}', ${lat}, ${lng})"
+                    class="flex items-center gap-2 w-full p-2 mb-2 rounded transition-colors hover:bg-gray-100"
                     style="color: ${config.color}"
                   >
                     ${config.icon} ${category.charAt(0).toUpperCase() + category.slice(1)}
@@ -190,19 +134,40 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
             `;
             return div;
           };
-          categoryMenuControl.addTo(mapRef.current);
+          categoryControl.addTo(mapRef.current);
 
-          // Add window function to handle category toggling
-          (window as any).toggleCategory = (category: string) => {
-            const newVisibleCategories = new Set(visibleCategories);
-            if (newVisibleCategories.has(category)) {
-              newVisibleCategories.delete(category);
-              mapRef.current?.removeLayer(markersRef.current[category]);
-            } else {
-              newVisibleCategories.add(category);
-              markersRef.current[category].addTo(mapRef.current!);
+          // Add window function to handle category selection
+          (window as any).showCategoryInfo = async (category: string, lat: number, lng: number) => {
+            const config = CATEGORIES[category];
+            const pois = await fetchPOIs(lat, lng, category, config);
+
+            if (pois.length === 0) {
+              toast({
+                title: "No locations found",
+                description: `No ${category} locations found nearby.`,
+                variant: "destructive"
+              });
+              return;
             }
-            setVisibleCategories(newVisibleCategories);
+
+            const popup = L.popup()
+              .setLatLng([lat, lng])
+              .setContent(`
+                <div class="p-4 max-w-xs">
+                  <h4 class="font-bold text-lg mb-2" style="color: ${config.color}">
+                    ${config.icon} Nearby ${category.charAt(0).toUpperCase() + category.slice(1)}
+                  </h4>
+                  <ul class="space-y-2">
+                    ${pois.map((poi: any) => `
+                      <li class="text-sm">
+                        <strong>${poi.display_name.split(',')[0]}</strong>
+                        <p class="text-xs text-muted-foreground mt-1">${poi.display_name}</p>
+                      </li>
+                    `).join('')}
+                  </ul>
+                </div>
+              `)
+              .openOn(mapRef.current!);
           };
 
           onCenterChange({ lat, lng });
@@ -225,7 +190,7 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
     };
 
     geocodeLocation();
-  }, [location, visibleCategories]);
+  }, [location]);
 
   return (
     <div 
