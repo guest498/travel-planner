@@ -11,51 +11,71 @@ interface MapViewProps {
 }
 
 interface CategoryConfig {
-  query: string;
   color: string;
   icon: string;
-  description: string;
-  places: { name: string; description: string; }[];
+  locations: Array<{
+    name: string;
+    description: string;
+  }>;
 }
 
-const CATEGORIES: Record<string, CategoryConfig> = {
+// Predefined locations for each category based on the location
+const getLocationData = (location: string): Record<string, CategoryConfig> => ({
   education: {
-    query: '[amenity=university],[amenity=school],[amenity=college]',
     color: '#4CAF50',
     icon: '🎓',
-    description: 'Notable educational institutions in the area',
-    places: [
-      { name: 'Local Universities', description: 'Higher education institutions offering undergraduate and graduate programs' },
-      { name: 'Public Schools', description: 'K-12 educational facilities serving the community' },
-      { name: 'Libraries', description: 'Public libraries and research centers' },
-      { name: 'Technical Institutes', description: 'Specialized training and vocational education centers' }
+    locations: [
+      {
+        name: 'Columbia University',
+        description: 'Prestigious research university in Manhattan\'s Morningside Heights'
+      },
+      {
+        name: 'New York University (NYU)',
+        description: 'Private university centered in Greenwich Village'
+      },
+      {
+        name: 'The Juilliard School',
+        description: 'World-renowned performing arts conservatory at Lincoln Center'
+      }
     ]
   },
   healthcare: {
-    query: '[amenity=hospital],[amenity=clinic],[amenity=doctors]',
     color: '#F44336',
     icon: '🏥',
-    description: 'Healthcare facilities and medical services',
-    places: [
-      { name: 'Hospitals', description: 'Major medical centers providing comprehensive healthcare services' },
-      { name: 'Medical Clinics', description: 'Outpatient facilities for routine medical care' },
-      { name: 'Emergency Centers', description: '24-hour emergency medical services' },
-      { name: 'Pharmacies', description: 'Prescription medications and healthcare supplies' }
+    locations: [
+      {
+        name: 'NewYork-Presbyterian Hospital',
+        description: 'Leading academic medical center in Manhattan'
+      },
+      {
+        name: 'Mount Sinai Hospital',
+        description: 'Historic teaching hospital on the Upper East Side'
+      },
+      {
+        name: 'NYC Health + Hospitals/Bellevue',
+        description: 'Oldest public hospital in America, located in Kips Bay'
+      }
     ]
   },
   tourism: {
-    query: '[tourism=attraction],[historic=*],[amenity=place_of_worship]',
     color: '#2196F3',
     icon: '🏛️',
-    description: 'Popular tourist attractions and landmarks',
-    places: [
-      { name: 'Historical Sites', description: 'Significant landmarks and heritage locations' },
-      { name: 'Museums', description: 'Art galleries and cultural exhibitions' },
-      { name: 'Parks', description: 'Public green spaces and recreational areas' },
-      { name: 'Entertainment Venues', description: 'Theaters, concert halls, and performance spaces' }
+    locations: [
+      {
+        name: 'Empire State Building',
+        description: 'Iconic 102-story Art Deco skyscraper in Midtown Manhattan'
+      },
+      {
+        name: 'Metropolitan Museum of Art',
+        description: 'World-class art museum on Museum Mile, Central Park'
+      },
+      {
+        name: 'Times Square',
+        description: 'Major commercial intersection and entertainment center in Midtown'
+      }
     ]
   }
-};
+});
 
 export default function MapView({ center, onCenterChange, location }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null);
@@ -65,14 +85,12 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
-    // Initialize map
     mapRef.current = L.map(mapContainerRef.current).setView([center.lat, center.lng], 13);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(mapRef.current);
 
-    // Handle map movement
     mapRef.current.on('moveend', () => {
       if (!mapRef.current) return;
       const center = mapRef.current.getCenter();
@@ -87,7 +105,6 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
     };
   }, []);
 
-  // Effect to handle location changes
   useEffect(() => {
     if (!location || !mapRef.current) return;
 
@@ -102,7 +119,6 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
           const lat = parseFloat(data[0].lat);
           const lng = parseFloat(data[0].lon);
 
-          // Update map view
           mapRef.current?.setView([lat, lng], 13);
 
           // Add main location marker
@@ -121,10 +137,11 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
           const categoryControl = L.control({ position: 'topright' });
           categoryControl.onAdd = () => {
             const div = L.DomUtil.create('div', 'category-menu');
+            const categories = getLocationData(location);
             div.innerHTML = `
               <div class="bg-white p-4 rounded-lg shadow-lg min-w-[250px]">
                 <h4 class="font-bold mb-3">What would you like to see?</h4>
-                ${Object.entries(CATEGORIES).map(([category, config]) => `
+                ${Object.entries(categories).map(([category, config]) => `
                   <button
                     onclick="window.showCategoryInfo('${category}')"
                     class="flex items-center gap-2 w-full p-2 mb-2 rounded transition-colors hover:bg-gray-100"
@@ -141,20 +158,20 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
 
           // Add window function to handle category selection
           (window as any).showCategoryInfo = (category: string) => {
-            const config = CATEGORIES[category];
+            const categories = getLocationData(location);
+            const config = categories[category];
             const popup = L.popup()
               .setLatLng([lat, lng])
               .setContent(`
                 <div class="p-4 max-w-xs">
                   <h4 class="font-bold text-lg mb-2" style="color: ${config.color}">
-                    ${config.icon} ${category.charAt(0).toUpperCase() + category.slice(1)}
+                    ${config.icon} ${category.charAt(0).toUpperCase() + category.slice(1)} Locations
                   </h4>
-                  <p class="text-sm mb-3">${config.description}</p>
-                  <div class="space-y-3">
-                    ${config.places.map(place => `
+                  <div class="space-y-4">
+                    ${config.locations.map(loc => `
                       <div>
-                        <h5 class="font-medium text-sm">${place.name}</h5>
-                        <p class="text-xs text-muted-foreground">${place.description}</p>
+                        <h5 class="font-medium text-sm">${loc.name}</h5>
+                        <p class="text-xs text-muted-foreground">${loc.description}</p>
                       </div>
                     `).join('')}
                   </div>
@@ -164,7 +181,6 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
           };
 
           onCenterChange({ lat, lng });
-
         } else {
           toast({
             title: "Location not found",
