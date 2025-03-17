@@ -157,9 +157,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
         temperature: Math.round(Math.random() * 30),
         condition: ['Clear', 'Cloudy', 'Rain', 'Snow'][Math.floor(Math.random() * 4)],
         humidity: Math.round(Math.random() * 100),
-        windSpeed: Math.round(Math.random() * 30)
+        windSpeed: Math.round(Math.random() * 30),
+        icon: '☀️' // Default icon
       };
-      res.json(weatherData);
+
+      // Set weather icon based on condition
+      switch (weatherData.condition) {
+        case 'Clear':
+          weatherData.icon = '☀️';
+          break;
+        case 'Cloudy':
+          weatherData.icon = '☁️';
+          break;
+        case 'Rain':
+          weatherData.icon = '🌧️';
+          break;
+        case 'Snow':
+          weatherData.icon = '🌨️';
+          break;
+      }
+
+      // Generate travel recommendations based on weather
+      const recommendations = [];
+
+      if (weatherData.condition === 'Clear') {
+        recommendations.push({
+          activity: 'Outdoor Sightseeing',
+          reason: 'Perfect weather for exploring landmarks and taking photos',
+          bestTime: 'Throughout the day'
+        });
+      } else if (weatherData.condition === 'Cloudy') {
+        recommendations.push({
+          activity: 'Museum Tours',
+          reason: 'Great day for indoor cultural activities',
+          bestTime: 'Late morning to afternoon'
+        });
+      } else if (weatherData.condition === 'Rain') {
+        recommendations.push({
+          activity: 'Local Cuisine Experience',
+          reason: 'Ideal time to explore indoor markets and restaurants',
+          bestTime: 'Lunch and dinner hours'
+        });
+      } else if (weatherData.condition === 'Snow') {
+        recommendations.push({
+          activity: 'Winter Sports',
+          reason: 'Perfect conditions for snow activities',
+          bestTime: 'Early morning for best snow conditions'
+        });
+      }
+
+      // Add a general recommendation based on temperature
+      if (weatherData.temperature > 25) {
+        recommendations.push({
+          activity: 'Water Activities',
+          reason: 'High temperature perfect for cooling off',
+          bestTime: 'Mid-morning or late afternoon'
+        });
+      } else if (weatherData.temperature < 10) {
+        recommendations.push({
+          activity: 'Indoor Attractions',
+          reason: 'Stay warm while enjoying local culture',
+          bestTime: 'Anytime during operating hours'
+        });
+      }
+
+      res.json({ weather: weatherData, recommendations });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
