@@ -189,6 +189,286 @@ const getLocationData = (location: string): Record<string, CategoryConfig> => {
           }
         ]
       }
+    },
+    'japan': {
+      education: {
+        color: '#4CAF50',
+        icon: '🎓',
+        locations: [
+          {
+            name: 'University of Tokyo',
+            location: 'Bunkyo, Tokyo, Japan'
+          },
+          {
+            name: 'Kyoto University',
+            location: 'Sakyo-ku, Kyoto, Japan'
+          },
+          {
+            name: 'Osaka University',
+            location: 'Suita, Osaka, Japan'
+          }
+        ]
+      },
+      healthcare: {
+        color: '#F44336',
+        icon: '🏥',
+        locations: [
+          {
+            name: 'Tokyo Medical University Hospital',
+            location: 'Shinjuku, Tokyo, Japan'
+          },
+          {
+            name: 'Kyoto University Hospital',
+            location: 'Sakyo-ku, Kyoto, Japan'
+          },
+          {
+            name: 'National Cancer Center Hospital',
+            location: 'Chuo, Tokyo, Japan'
+          }
+        ]
+      },
+      tourism: {
+        color: '#2196F3',
+        icon: '🏛️',
+        locations: [
+          {
+            name: 'Senso-ji Temple',
+            location: 'Asakusa, Tokyo, Japan'
+          },
+          {
+            name: 'Fushimi Inari Shrine',
+            location: 'Fushimi-ku, Kyoto, Japan'
+          },
+          {
+            name: 'Mount Fuji',
+            location: 'Fujinomiya, Shizuoka, Japan'
+          }
+        ]
+      }
+    },
+    'france': {
+      education: {
+        color: '#4CAF50',
+        icon: '🎓',
+        locations: [
+          {
+            name: 'Sorbonne University',
+            location: 'Latin Quarter, Paris, France'
+          },
+          {
+            name: 'École Polytechnique',
+            location: 'Palaiseau, Île-de-France, France'
+          },
+          {
+            name: 'Sciences Po',
+            location: 'Saint-Germain-des-Prés, Paris, France'
+          }
+        ]
+      },
+      healthcare: {
+        color: '#F44336',
+        icon: '🏥',
+        locations: [
+          {
+            name: 'Hôpital Pitié-Salpêtrière',
+            location: '13th arrondissement, Paris, France'
+          },
+          {
+            name: 'American Hospital of Paris',
+            location: 'Neuilly-sur-Seine, France'
+          },
+          {
+            name: 'Hôpital Necker-Enfants Malades',
+            location: '15th arrondissement, Paris, France'
+          }
+        ]
+      },
+      tourism: {
+        color: '#2196F3',
+        icon: '🏛️',
+        locations: [
+          {
+            name: 'Eiffel Tower',
+            location: 'Champ de Mars, Paris, France'
+          },
+          {
+            name: 'Palace of Versailles',
+            location: 'Versailles, France'
+          },
+          {
+            name: 'Louvre Museum',
+            location: '1st arrondissement, Paris, France'
+          }
+        ]
+      }
+    },
+    'united kingdom': {
+      education: {
+        color: '#4CAF50',
+        icon: '🎓',
+        locations: [
+          {
+            name: 'University of Oxford',
+            location: 'Oxford, England, UK'
+          },
+          {
+            name: 'University of Cambridge',
+            location: 'Cambridge, England, UK'
+          },
+          {
+            name: 'Imperial College London',
+            location: 'South Kensington, London, UK'
+          }
+        ]
+      },
+      healthcare: {
+        color: '#F44336',
+        icon: '🏥',
+        locations: [
+          {
+            name: 'Guy\'s Hospital',
+            location: 'London Bridge, London, UK'
+          },
+          {
+            name: 'St Thomas\' Hospital',
+            location: 'Westminster Bridge Road, London, UK'
+          },
+          {
+            name: 'Great Ormond Street Hospital',
+            location: 'Bloomsbury, London, UK'
+          }
+        ]
+      },
+      tourism: {
+        color: '#2196F3',
+        icon: '🏛️',
+        locations: [
+          {
+            name: 'Big Ben',
+            location: 'Westminster, London, UK'
+          },
+          {
+            name: 'Tower of London',
+            location: 'Tower Hill, London, UK'
+          },
+          {
+            name: 'Edinburgh Castle',
+            location: 'Edinburgh, Scotland, UK'
+          }
+        ]
+      }
+    },
+    'australia': {
+      education: {
+        color: '#4CAF50',
+        icon: '🎓',
+        locations: [
+          {
+            name: 'University of Melbourne',
+            location: 'Melbourne, Victoria, Australia'
+          },
+          {
+            name: 'University of Sydney',
+            location: 'Sydney, New South Wales, Australia'
+          },
+          {
+            name: 'Australian National University',
+            location: 'Canberra, Australian Capital Territory, Australia'
+          }
+        ]
+      },
+      healthcare: {
+        color: '#F44336',
+        icon: '🏥',
+        locations: [
+          {
+            name: 'Royal Melbourne Hospital',
+            location: 'Melbourne, Victoria, Australia'
+          },
+          {
+            name: 'Sydney Hospital',
+            location: 'Sydney, New South Wales, Australia'
+          },
+          {
+            name: 'Alfred Hospital',
+            location: 'Melbourne, Victoria, Australia'
+          }
+        ]
+      },
+      tourism: {
+        color: '#2196F3',
+        icon: '🏛️',
+        locations: [
+          {
+            name: 'Sydney Opera House',
+            location: 'Sydney, New South Wales, Australia'
+          },
+          {
+            name: 'Uluru',
+            location: 'Northern Territory, Australia'
+          },
+          {
+            name: 'Great Barrier Reef',
+            location: 'Queensland, Australia'
+          }
+        ]
+      }
+    },
+    'canada': {
+      education: {
+        color: '#4CAF50',
+        icon: '🎓',
+        locations: [
+          {
+            name: 'University of Toronto',
+            location: 'Toronto, Ontario, Canada'
+          },
+          {
+            name: 'McGill University',
+            location: 'Montreal, Quebec, Canada'
+          },
+          {
+            name: 'University of British Columbia',
+            location: 'Vancouver, British Columbia, Canada'
+          }
+        ]
+      },
+      healthcare: {
+        color: '#F44336',
+        icon: '🏥',
+        locations: [
+          {
+            name: 'Toronto General Hospital',
+            location: 'Toronto, Ontario, Canada'
+          },
+          {
+            name: 'Montreal General Hospital',
+            location: 'Montreal, Quebec, Canada'
+          },
+          {
+            name: 'Vancouver General Hospital',
+            location: 'Vancouver, British Columbia, Canada'
+          }
+        ]
+      },
+      tourism: {
+        color: '#2196F3',
+        icon: '🏛️',
+        locations: [
+          {
+            name: 'CN Tower',
+            location: 'Toronto, Ontario, Canada'
+          },
+          {
+            name: 'Niagara Falls',
+            location: 'Ontario, Canada'
+          },
+          {
+            name: 'Banff National Park',
+            location: 'Alberta, Canada'
+          }
+        ]
+      }
     }
   };
 
