@@ -133,6 +133,62 @@ const getLocationData = (location: string): Record<string, CategoryConfig> => {
           }
         ]
       }
+    },
+    'germany': {
+      education: {
+        color: '#4CAF50',
+        icon: '🎓',
+        locations: [
+          {
+            name: 'Technical University of Munich',
+            location: 'Munich, Bavaria, Germany'
+          },
+          {
+            name: 'Heidelberg University',
+            location: 'Heidelberg, Baden-Württemberg, Germany'
+          },
+          {
+            name: 'Humboldt University of Berlin',
+            location: 'Berlin, Germany'
+          }
+        ]
+      },
+      healthcare: {
+        color: '#F44336',
+        icon: '🏥',
+        locations: [
+          {
+            name: 'Charité - Universitätsmedizin Berlin',
+            location: 'Berlin, Germany'
+          },
+          {
+            name: 'University Hospital Heidelberg',
+            location: 'Heidelberg, Germany'
+          },
+          {
+            name: 'University Hospital Munich',
+            location: 'Munich, Germany'
+          }
+        ]
+      },
+      tourism: {
+        color: '#2196F3',
+        icon: '🏛️',
+        locations: [
+          {
+            name: 'Brandenburg Gate',
+            location: 'Pariser Platz, Berlin, Germany'
+          },
+          {
+            name: 'Neuschwanstein Castle',
+            location: 'Schwangau, Bavaria, Germany'
+          },
+          {
+            name: 'Cologne Cathedral',
+            location: 'Cologne, North Rhine-Westphalia, Germany'
+          }
+        ]
+      }
     }
   };
 
@@ -220,16 +276,24 @@ export default function MapView({ location }: MapViewProps) {
 
   const categories = getLocationData(location);
 
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      {/* Map */}
-      <div 
-        ref={mapContainerRef}
-        className="w-full h-[400px] rounded-lg overflow-hidden shadow-md"
-      />
+  // Capitalize the first letter of each word in the location
+  const capitalizedLocation = location
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
 
-      {/* Categories */}
-      <div className="space-y-4">
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+      {/* Map - Takes up 3 columns */}
+      <div className="lg:col-span-3">
+        <div 
+          ref={mapContainerRef}
+          className="w-full h-[600px] rounded-lg overflow-hidden shadow-md"
+        />
+      </div>
+
+      {/* Categories - Takes up 1 column */}
+      <div className="space-y-4 max-h-[600px] overflow-y-auto">
         {Object.entries(categories).map(([category, config]) => (
           <Card key={category} className="p-4">
             <div className="flex items-center gap-2 mb-4" style={{ color: config.color }}>
@@ -239,7 +303,7 @@ export default function MapView({ location }: MapViewProps) {
             <div className="space-y-4">
               {config.locations.map((loc, index) => (
                 <div key={index} className="space-y-2 border-b pb-4 last:border-b-0 last:pb-0">
-                  <p><strong>Place:</strong> {location}</p>
+                  <p><strong>Place:</strong> {capitalizedLocation}</p>
                   <p><strong>Name:</strong> {loc.name}</p>
                   <p><strong>Location:</strong> {loc.location}</p>
                 </div>
