@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import L from 'leaflet';
@@ -37,19 +37,24 @@ const CATEGORIES: Record<string, CategoryConfig> = {
 export default function MapView({ center, onCenterChange, location }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const markersRef = useRef<L.LayerGroup | null>(null);
+  const markersRef = useRef<Record<string, L.LayerGroup>>({});
   const { toast } = useToast();
+  const [visibleCategories, setVisibleCategories] = useState<Set<string>>(new Set(Object.keys(CATEGORIES)));
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
     // Initialize map
     mapRef.current = L.map(mapContainerRef.current).setView([center.lat, center.lng], 13);
-    markersRef.current = L.layerGroup().addTo(mapRef.current);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(mapRef.current);
+
+    // Initialize layer groups for each category
+    Object.keys(CATEGORIES).forEach(category => {
+      markersRef.current[category] = L.layerGroup().addTo(mapRef.current!);
+    });
 
     // Handle map movement
     mapRef.current.on('moveend', () => {
@@ -88,10 +93,10 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
 
   // Effect to handle location changes
   useEffect(() => {
-    if (!location || !mapRef.current || !markersRef.current) return;
+    if (!location || !mapRef.current) return;
 
     // Clear existing markers
-    markersRef.current.clearLayers();
+    Object.values(markersRef.current).forEach(layer => layer.clearLayers());
 
     const geocodeLocation = async () => {
       try {
@@ -107,7 +112,7 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
           // Update map view
           mapRef.current?.setView([lat, lng], 13);
 
-          // Add main location marker
+          // Add main location marker with popup
           const mainMarker = L.marker([lat, lng], {
             icon: L.divIcon({
               className: 'location-marker',
@@ -117,24 +122,44 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
               iconSize: [200, 40],
               iconAnchor: [100, 40]
             })
-          }).addTo(markersRef.current!);
+          }).addTo(mapRef.current);
 
-          // Fetch POIs for all categories
+          // Create category menu popup
+          const categoryMenu = L.popup({
+            closeButton: false,
+            offset: [0, -20]
+          })
+          .setLatLng([lat, lng])
+          .setContent(`
+            <div class="p-3 min-w-[200px]">
+              <h4 class="font-bold mb-2">What would you like to see?</h4>
+              ${Object.entries(CATEGORIES).map(([category, config]) => `
+                <button onclick="window.toggleCategory('${category}')"
+                  class="flex items-center gap-2 w-full p-2 rounded hover:bg-gray-100 transition-colors"
+                  style="color: ${config.color}">
+                  ${config.icon} ${category.charAt(0).toUpperCase() + category.slice(1)}
+                </button>
+              `).join('')}
+            </div>
+          `);
+
+          // Show category menu on marker click
+          mainMarker.on('click', () => {
+            categoryMenu.openOn(mapRef.current!);
+          });
+
+          // Fetch and display POIs for each category
           const allPOIs: Record<string, any[]> = {};
           for (const [category, config] of Object.entries(CATEGORIES)) {
             const pois = await fetchPOIs(lat, lng, category, config);
             allPOIs[category] = pois;
-          }
 
-          // Add markers for each category
-          Object.entries(allPOIs).forEach(([category, pois]) => {
-            const config = CATEGORIES[category];
+            // Add markers for each POI in this category
             pois.forEach((poi: any) => {
               const poiLat = parseFloat(poi.lat);
               const poiLng = parseFloat(poi.lon);
               const name = poi.display_name.split(',')[0];
 
-              // Create a clickable marker with the category icon and name
               const poiMarker = L.marker([poiLat, poiLng], {
                 icon: L.divIcon({
                   className: 'poi-marker',
@@ -147,7 +172,6 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
                 })
               });
 
-              // Create detailed popup content for POI
               const popupContent = `
                 <div class="p-4 max-w-xs">
                   <h4 class="font-bold text-lg mb-2">${name}</h4>
@@ -161,53 +185,50 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
               `;
 
               poiMarker.bindPopup(popupContent);
-              poiMarker.addTo(markersRef.current!);
+              poiMarker.addTo(markersRef.current[category]);
             });
-          });
+          }
 
-          // Create category legend
-          const legend = L.control({ position: 'topright' });
-          legend.onAdd = () => {
-            const div = L.DomUtil.create('div', 'map-legend');
-            div.innerHTML = `
-              <div class="bg-white p-3 rounded-lg shadow-lg">
-                <h4 class="font-bold mb-2">Points of Interest</h4>
-                ${Object.entries(CATEGORIES).map(([category, config]) => `
-                  <div class="flex items-center gap-2 mb-1">
-                    <span style="color: ${config.color}">${config.icon}</span>
-                    <span class="text-sm">${category.charAt(0).toUpperCase() + category.slice(1)}</span>
-                  </div>
-                `).join('')}
-              </div>
-            `;
-            return div;
+          // Add window function to handle category toggling
+          (window as any).toggleCategory = (category: string) => {
+            const newVisibleCategories = new Set(visibleCategories);
+            if (newVisibleCategories.has(category)) {
+              newVisibleCategories.delete(category);
+              markersRef.current[category].clearLayers();
+            } else {
+              newVisibleCategories.add(category);
+              if (allPOIs[category]) {
+                allPOIs[category].forEach((poi: any) => {
+                  const poiMarker = L.marker([parseFloat(poi.lat), parseFloat(poi.lon)], {
+                    icon: L.divIcon({
+                      className: 'poi-marker',
+                      html: `<div class="cursor-pointer px-3 py-1 rounded-lg shadow-lg text-sm font-medium" 
+                             style="background-color: ${CATEGORIES[category].color}; color: white;">
+                               ${CATEGORIES[category].icon} ${poi.display_name.split(',')[0]}
+                             </div>`,
+                      iconSize: [200, 30],
+                      iconAnchor: [100, 30]
+                    })
+                  });
+                  poiMarker.bindPopup(`
+                    <div class="p-4 max-w-xs">
+                      <h4 class="font-bold text-lg mb-2">${poi.display_name.split(',')[0]}</h4>
+                      <div class="space-y-2">
+                        <p class="flex items-center gap-2 text-sm font-medium" style="color: ${CATEGORIES[category].color}">
+                          ${CATEGORIES[category].icon} ${category.charAt(0).toUpperCase() + category.slice(1)}
+                        </p>
+                        <p class="text-sm">${poi.display_name}</p>
+                      </div>
+                    </div>
+                  `);
+                  poiMarker.addTo(markersRef.current[category]);
+                });
+              }
+            }
+            setVisibleCategories(newVisibleCategories);
+            categoryMenu.close();
           };
-          legend.addTo(mapRef.current);
 
-          // Create summary popup for main marker
-          const summaryContent = `
-            <div class="p-4 max-w-xs">
-              <h3 class="text-lg font-bold mb-3">${location}</h3>
-              <div class="space-y-4">
-                ${Object.entries(allPOIs).map(([category, pois]) => `
-                  <div>
-                    <p class="font-medium text-base flex items-center gap-2" style="color: ${CATEGORIES[category].color}">
-                      ${CATEGORIES[category].icon} ${category.charAt(0).toUpperCase() + category.slice(1)}
-                    </p>
-                    <ul class="list-disc pl-4 space-y-1 mt-1">
-                      ${pois.slice(0, 3).map((poi: any) => `
-                        <li class="text-sm hover:text-primary cursor-pointer">
-                          ${poi.display_name.split(',')[0]}
-                        </li>
-                      `).join('')}
-                    </ul>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-          `;
-
-          mainMarker.bindPopup(summaryContent).openPopup();
           onCenterChange({ lat, lng });
 
         } else {
