@@ -8,10 +8,33 @@ interface MapViewProps {
   center: { lat: number; lng: number };
   onCenterChange: (center: { lat: number; lng: number }) => void;
   location: string | null;
-  searchCategory: string | null;
 }
 
-export default function MapView({ center, onCenterChange, location, searchCategory }: MapViewProps) {
+interface CategoryConfig {
+  query: string;
+  color: string;
+  icon: string;
+}
+
+const CATEGORIES: Record<string, CategoryConfig> = {
+  education: {
+    query: '[amenity=university],[amenity=school],[amenity=college]',
+    color: '#4CAF50',
+    icon: '🎓'
+  },
+  healthcare: {
+    query: '[amenity=hospital],[amenity=clinic],[amenity=doctors]',
+    color: '#F44336',
+    icon: '🏥'
+  },
+  tourism: {
+    query: '[tourism=attraction],[historic=*],[amenity=place_of_worship]',
+    color: '#2196F3',
+    icon: '🏛️'
+  }
+};
+
+export default function MapView({ center, onCenterChange, location }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
@@ -42,6 +65,26 @@ export default function MapView({ center, onCenterChange, location, searchCatego
       }
     };
   }, []);
+
+  // Fetch POIs for a specific category
+  const fetchPOIs = async (lat: number, lng: number, category: string, config: CategoryConfig) => {
+    const bbox = {
+      north: lat + 0.02,
+      south: lat - 0.02,
+      east: lng + 0.02,
+      west: lng - 0.02
+    };
+
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?` +
+      `format=json&` +
+      `q=${encodeURIComponent(config.query)}&` +
+      `viewbox=${bbox.west},${bbox.south},${bbox.east},${bbox.north}&` +
+      `bounded=1&limit=5`
+    );
+
+    return await response.json();
+  };
 
   // Effect to handle location changes
   useEffect(() => {
@@ -76,76 +119,68 @@ export default function MapView({ center, onCenterChange, location, searchCatego
             })
           }).addTo(markersRef.current!);
 
-          // Fetch nearby points of interest
-          const bbox = {
-            north: lat + 0.02,
-            south: lat - 0.02,
-            east: lng + 0.02,
-            west: lng - 0.02
-          };
+          // Fetch POIs for all categories
+          const allPOIs: Record<string, any[]> = {};
+          for (const [category, config] of Object.entries(CATEGORIES)) {
+            const pois = await fetchPOIs(lat, lng, category, config);
+            allPOIs[category] = pois;
+          }
 
-          const poiResponse = await fetch(
-            `https://nominatim.openstreetmap.org/search?` +
-            `format=json&` +
-            `viewbox=${bbox.west},${bbox.south},${bbox.east},${bbox.north}&` +
-            `bounded=1&limit=10&amenity=restaurant|school|hospital|park|university`
-          );
+          // Add markers for each category
+          Object.entries(allPOIs).forEach(([category, pois]) => {
+            const config = CATEGORIES[category];
+            pois.forEach((poi: any) => {
+              const poiLat = parseFloat(poi.lat);
+              const poiLng = parseFloat(poi.lon);
+              const name = poi.display_name.split(',')[0];
 
-          const pois = await poiResponse.json();
+              const poiMarker = L.marker([poiLat, poiLng], {
+                icon: L.divIcon({
+                  className: 'poi-marker',
+                  html: `<div class="px-3 py-1 rounded-lg shadow-lg text-sm font-medium" 
+                         style="background-color: ${config.color}; color: white;">
+                          ${config.icon} ${name}
+                        </div>`,
+                  iconSize: [200, 30],
+                  iconAnchor: [100, 30]
+                })
+              });
 
-          // Add POI markers
-          pois.slice(0, 5).forEach((poi: any) => {
-            const poiLat = parseFloat(poi.lat);
-            const poiLng = parseFloat(poi.lon);
-            const name = poi.display_name.split(',')[0];
-            const type = (poi.type || 'location').replace('_', ' ');
+              const popupContent = `
+                <div class="p-3">
+                  <h4 class="font-bold text-base mb-1">${name}</h4>
+                  <p class="text-sm text-muted-foreground capitalize">${category}</p>
+                  <p class="text-sm mt-2">${poi.display_name}</p>
+                </div>
+              `;
 
-            // Create marker for each POI
-            const poiMarker = L.marker([poiLat, poiLng], {
-              icon: L.divIcon({
-                className: 'poi-marker',
-                html: `<div class="bg-white px-3 py-1 rounded-lg shadow-lg text-sm font-medium">
-                        ${name}
-                      </div>`,
-                iconSize: [150, 30],
-                iconAnchor: [75, 30]
-              })
+              poiMarker.bindPopup(popupContent);
+              poiMarker.addTo(markersRef.current!);
             });
-
-            // Create popup content for POI
-            const popupContent = `
-              <div class="p-3">
-                <h4 class="font-bold text-base mb-1">${name}</h4>
-                <p class="text-sm text-muted-foreground">${type}</p>
-                <p class="text-sm mt-2">${poi.display_name}</p>
-              </div>
-            `;
-
-            poiMarker.bindPopup(popupContent);
-            poiMarker.addTo(markersRef.current!);
           });
 
           // Create summary popup for main marker
-          const mainPopupContent = `
+          const summaryContent = `
             <div class="p-4 max-w-xs">
               <h3 class="text-lg font-bold mb-2">${location}</h3>
-              <div class="space-y-2">
-                <p class="font-medium text-primary">Nearby Points of Interest:</p>
-                <ul class="list-disc pl-4 space-y-1">
-                  ${pois.slice(0, 5).map((poi: any) => `
-                    <li class="text-sm">
-                      ${poi.display_name.split(',')[0]}
-                      <span class="text-xs text-muted-foreground">
-                        (${(poi.type || 'location').replace('_', ' ')})
-                      </span>
-                    </li>
-                  `).join('')}
-                </ul>
+              <div class="space-y-3">
+                ${Object.entries(allPOIs).map(([category, pois]) => `
+                  <div>
+                    <p class="font-medium text-primary flex items-center gap-1">
+                      ${CATEGORIES[category].icon} ${category.charAt(0).toUpperCase() + category.slice(1)}
+                    </p>
+                    <ul class="list-disc pl-4 space-y-1">
+                      ${pois.slice(0, 3).map((poi: any) => `
+                        <li class="text-sm">${poi.display_name.split(',')[0]}</li>
+                      `).join('')}
+                    </ul>
+                  </div>
+                `).join('')}
               </div>
             </div>
           `;
 
-          mainMarker.bindPopup(mainPopupContent).openPopup();
+          mainMarker.bindPopup(summaryContent).openPopup();
           onCenterChange({ lat, lng });
 
         } else {
