@@ -469,6 +469,342 @@ const getLocationData = (location: string): Record<string, CategoryConfig> => {
           }
         ]
       }
+    },
+    'italy': {
+      education: {
+        color: '#4CAF50',
+        icon: '🎓',
+        locations: [
+          {
+            name: 'University of Bologna',
+            location: 'Bologna, Emilia-Romagna, Italy'
+          },
+          {
+            name: 'Sapienza University of Rome',
+            location: 'Rome, Lazio, Italy'
+          },
+          {
+            name: 'University of Milan',
+            location: 'Milan, Lombardy, Italy'
+          }
+        ]
+      },
+      healthcare: {
+        color: '#F44336',
+        icon: '🏥',
+        locations: [
+          {
+            name: 'Policlinico Gemelli',
+            location: 'Rome, Lazio, Italy'
+          },
+          {
+            name: 'Ospedale Maggiore Policlinico',
+            location: 'Milan, Lombardy, Italy'
+          },
+          {
+            name: 'Ospedale San Raffaele',
+            location: 'Milan, Lombardy, Italy'
+          }
+        ]
+      },
+      tourism: {
+        color: '#2196F3',
+        icon: '🏛️',
+        locations: [
+          {
+            name: 'Colosseum',
+            location: 'Rome, Lazio, Italy'
+          },
+          {
+            name: 'Venice Canals',
+            location: 'Venice, Veneto, Italy'
+          },
+          {
+            name: 'Leaning Tower of Pisa',
+            location: 'Pisa, Tuscany, Italy'
+          }
+        ]
+      }
+    },
+    'spain': {
+      education: {
+        color: '#4CAF50',
+        icon: '🎓',
+        locations: [
+          {
+            name: 'University of Barcelona',
+            location: 'Barcelona, Catalonia, Spain'
+          },
+          {
+            name: 'Complutense University of Madrid',
+            location: 'Madrid, Spain'
+          },
+          {
+            name: 'University of Valencia',
+            location: 'Valencia, Spain'
+          }
+        ]
+      },
+      healthcare: {
+        color: '#F44336',
+        icon: '🏥',
+        locations: [
+          {
+            name: 'Hospital Clinic Barcelona',
+            location: 'Barcelona, Catalonia, Spain'
+          },
+          {
+            name: 'Hospital La Paz',
+            location: 'Madrid, Spain'
+          },
+          {
+            name: 'Hospital Universitari i Politècnic La Fe',
+            location: 'Valencia, Spain'
+          }
+        ]
+      },
+      tourism: {
+        color: '#2196F3',
+        icon: '🏛️',
+        locations: [
+          {
+            name: 'Sagrada Familia',
+            location: 'Barcelona, Catalonia, Spain'
+          },
+          {
+            name: 'Royal Palace of Madrid',
+            location: 'Madrid, Spain'
+          },
+          {
+            name: 'Alhambra',
+            location: 'Granada, Andalusia, Spain'
+          }
+        ]
+      }
+    },
+    'brazil': {
+      education: {
+        color: '#4CAF50',
+        icon: '🎓',
+        locations: [
+          {
+            name: 'University of São Paulo',
+            location: 'São Paulo, Brazil'
+          },
+          {
+            name: 'Federal University of Rio de Janeiro',
+            location: 'Rio de Janeiro, Brazil'
+          },
+          {
+            name: 'University of Campinas',
+            location: 'Campinas, São Paulo, Brazil'
+          }
+        ]
+      },
+      healthcare: {
+        color: '#F44336',
+        icon: '🏥',
+        locations: [
+          {
+            name: 'Hospital Israelita Albert Einstein',
+            location: 'São Paulo, Brazil'
+          },
+          {
+            name: 'Hospital Sírio-Libanês',
+            location: 'São Paulo, Brazil'
+          },
+          {
+            name: 'Hospital das Clínicas',
+            location: 'Rio de Janeiro, Brazil'
+          }
+        ]
+      },
+      tourism: {
+        color: '#2196F3',
+        icon: '🏛️',
+        locations: [
+          {
+            name: 'Christ the Redeemer',
+            location: 'Rio de Janeiro, Brazil'
+          },
+          {
+            name: 'Sugarloaf Mountain',
+            location: 'Rio de Janeiro, Brazil'
+          },
+          {
+            name: 'Iguazu Falls',
+            location: 'Foz do Iguaçu, Paraná, Brazil'
+          }
+        ]
+      }
+    },
+    'russia': {
+      education: {
+        color: '#4CAF50',
+        icon: '🎓',
+        locations: [
+          {
+            name: 'Moscow State University',
+            location: 'Moscow, Russia'
+          },
+          {
+            name: 'Saint Petersburg State University',
+            location: 'Saint Petersburg, Russia'
+          },
+          {
+            name: 'Novosibirsk State University',
+            location: 'Novosibirsk, Russia'
+          }
+        ]
+      },
+      healthcare: {
+        color: '#F44336',
+        icon: '🏥',
+        locations: [
+          {
+            name: 'First Moscow State Medical University',
+            location: 'Moscow, Russia'
+          },
+          {
+            name: 'N.I. Pirogov Russian National Research Medical University',
+            location: 'Moscow, Russia'
+          },
+          {
+            name: 'Saint Petersburg State Pediatric Medical University',
+            location: 'Saint Petersburg, Russia'
+          }
+        ]
+      },
+      tourism: {
+        color: '#2196F3',
+        icon: '🏛️',
+        locations: [
+          {
+            name: 'Red Square',
+            location: 'Moscow, Russia'
+          },
+          {
+            name: 'Kremlin',
+            location: 'Moscow, Russia'
+          },
+          {
+            name: 'Hermitage Museum',
+            location: 'Saint Petersburg, Russia'
+          }
+        ]
+      }
+    },
+    'china': {
+      education: {
+        color: '#4CAF50',
+        icon: '🎓',
+        locations: [
+          {
+            name: 'Tsinghua University',
+            location: 'Haidian District, Beijing, China'
+          },
+          {
+            name: 'Peking University',
+            location: 'Haidian District, Beijing, China'
+          },
+          {
+            name: 'Fudan University',
+            location: 'Shanghai, China'
+          }
+        ]
+      },
+      healthcare: {
+        color: '#F44336',
+        icon: '🏥',
+        locations: [
+          {
+            name: 'Peking Union Medical College Hospital',
+            location: 'Beijing, China'
+          },
+          {
+            name: 'Shanghai Ruijin Hospital',
+            location: 'Shanghai, China'
+          },
+          {
+            name: 'West China Hospital',
+            location: 'Chengdu, Sichuan, China'
+          }
+        ]
+      },
+      tourism: {
+        color: '#2196F3',
+        icon: '🏛️',
+        locations: [
+          {
+            name: 'Great Wall of China',
+            location: 'Beijing, China'
+          },
+          {
+            name: 'Forbidden City',
+            location: 'Beijing, China'
+          },
+          {
+            name: 'Terracotta Army',
+            location: "Xi'an, Shaanxi, China"
+          }
+        ]
+      }
+    },
+    'south korea': {
+      education: {
+        color: '#4CAF50',
+        icon: '🎓',
+        locations: [
+          {
+            name: 'Seoul National University',
+            location: 'Gwanak-gu, Seoul, South Korea'
+          },
+          {
+            name: 'Korea Advanced Institute of Science and Technology',
+            location: 'Daejeon, South Korea'
+          },
+          {
+            name: 'Yonsei University',
+            location: 'Seodaemun-gu, Seoul, South Korea'
+          }
+        ]
+      },
+      healthcare: {
+        color: '#F44336',
+        icon: '🏥',
+        locations: [
+          {
+            name: 'Samsung Medical Center',
+            location: 'Gangnam-gu, Seoul, South Korea'
+          },
+          {
+            name: 'Asan Medical Center',
+            location: 'Songpa-gu, Seoul, South Korea'
+          },
+          {
+            name: 'Severance Hospital',
+            location: 'Seodaemun-gu, Seoul, South Korea'
+          }
+        ]
+      },
+      tourism: {
+        color: '#2196F3',
+        icon: '🏛️',
+        locations: [
+          {
+            name: 'Gyeongbokgung Palace',
+            location: 'Jongno-gu, Seoul, South Korea'
+          },
+          {
+            name: 'N Seoul Tower',
+            location: 'Yongsan-gu, Seoul, South Korea'
+          },
+          {
+            name: 'Jeju Island',
+            location: 'Jeju-do, South Korea'
+          }
+        ]
+      }
     }
   };
 
