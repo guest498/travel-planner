@@ -14,23 +14,46 @@ interface CategoryConfig {
   query: string;
   color: string;
   icon: string;
+  description: string;
+  places: { name: string; description: string; }[];
 }
 
 const CATEGORIES: Record<string, CategoryConfig> = {
   education: {
     query: '[amenity=university],[amenity=school],[amenity=college]',
     color: '#4CAF50',
-    icon: '🎓'
+    icon: '🎓',
+    description: 'Notable educational institutions in the area',
+    places: [
+      { name: 'Local Universities', description: 'Higher education institutions offering undergraduate and graduate programs' },
+      { name: 'Public Schools', description: 'K-12 educational facilities serving the community' },
+      { name: 'Libraries', description: 'Public libraries and research centers' },
+      { name: 'Technical Institutes', description: 'Specialized training and vocational education centers' }
+    ]
   },
   healthcare: {
     query: '[amenity=hospital],[amenity=clinic],[amenity=doctors]',
     color: '#F44336',
-    icon: '🏥'
+    icon: '🏥',
+    description: 'Healthcare facilities and medical services',
+    places: [
+      { name: 'Hospitals', description: 'Major medical centers providing comprehensive healthcare services' },
+      { name: 'Medical Clinics', description: 'Outpatient facilities for routine medical care' },
+      { name: 'Emergency Centers', description: '24-hour emergency medical services' },
+      { name: 'Pharmacies', description: 'Prescription medications and healthcare supplies' }
+    ]
   },
   tourism: {
     query: '[tourism=attraction],[historic=*],[amenity=place_of_worship]',
     color: '#2196F3',
-    icon: '🏛️'
+    icon: '🏛️',
+    description: 'Popular tourist attractions and landmarks',
+    places: [
+      { name: 'Historical Sites', description: 'Significant landmarks and heritage locations' },
+      { name: 'Museums', description: 'Art galleries and cultural exhibitions' },
+      { name: 'Parks', description: 'Public green spaces and recreational areas' },
+      { name: 'Entertainment Venues', description: 'Theaters, concert halls, and performance spaces' }
+    ]
   }
 };
 
@@ -63,26 +86,6 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
       }
     };
   }, []);
-
-  // Fetch POIs for a specific category
-  const fetchPOIs = async (lat: number, lng: number, category: string, config: CategoryConfig) => {
-    const bbox = {
-      north: lat + 0.02,
-      south: lat - 0.02,
-      east: lng + 0.02,
-      west: lng - 0.02
-    };
-
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?` +
-      `format=json&` +
-      `q=${encodeURIComponent(config.query)}&` +
-      `viewbox=${bbox.west},${bbox.south},${bbox.east},${bbox.north}&` +
-      `bounded=1&limit=5`
-    );
-
-    return await response.json();
-  };
 
   // Effect to handle location changes
   useEffect(() => {
@@ -119,11 +122,11 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
           categoryControl.onAdd = () => {
             const div = L.DomUtil.create('div', 'category-menu');
             div.innerHTML = `
-              <div class="bg-white p-4 rounded-lg shadow-lg min-w-[200px]">
+              <div class="bg-white p-4 rounded-lg shadow-lg min-w-[250px]">
                 <h4 class="font-bold mb-3">What would you like to see?</h4>
                 ${Object.entries(CATEGORIES).map(([category, config]) => `
                   <button
-                    onclick="window.showCategoryInfo('${category}', ${lat}, ${lng})"
+                    onclick="window.showCategoryInfo('${category}')"
                     class="flex items-center gap-2 w-full p-2 mb-2 rounded transition-colors hover:bg-gray-100"
                     style="color: ${config.color}"
                   >
@@ -137,34 +140,24 @@ export default function MapView({ center, onCenterChange, location }: MapViewPro
           categoryControl.addTo(mapRef.current);
 
           // Add window function to handle category selection
-          (window as any).showCategoryInfo = async (category: string, lat: number, lng: number) => {
+          (window as any).showCategoryInfo = (category: string) => {
             const config = CATEGORIES[category];
-            const pois = await fetchPOIs(lat, lng, category, config);
-
-            if (pois.length === 0) {
-              toast({
-                title: "No locations found",
-                description: `No ${category} locations found nearby.`,
-                variant: "destructive"
-              });
-              return;
-            }
-
             const popup = L.popup()
               .setLatLng([lat, lng])
               .setContent(`
                 <div class="p-4 max-w-xs">
                   <h4 class="font-bold text-lg mb-2" style="color: ${config.color}">
-                    ${config.icon} Nearby ${category.charAt(0).toUpperCase() + category.slice(1)}
+                    ${config.icon} ${category.charAt(0).toUpperCase() + category.slice(1)}
                   </h4>
-                  <ul class="space-y-2">
-                    ${pois.map((poi: any) => `
-                      <li class="text-sm">
-                        <strong>${poi.display_name.split(',')[0]}</strong>
-                        <p class="text-xs text-muted-foreground mt-1">${poi.display_name}</p>
-                      </li>
+                  <p class="text-sm mb-3">${config.description}</p>
+                  <div class="space-y-3">
+                    ${config.places.map(place => `
+                      <div>
+                        <h5 class="font-medium text-sm">${place.name}</h5>
+                        <p class="text-xs text-muted-foreground">${place.description}</p>
+                      </div>
                     `).join('')}
-                  </ul>
+                  </div>
                 </div>
               `)
               .openOn(mapRef.current!);
