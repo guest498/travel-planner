@@ -20,8 +20,287 @@ interface CategoryConfig {
 }
 
 const getLocationData = (location: string): Record<string, CategoryConfig> => {
-  // Define location-specific data
   const locationData: Record<string, Record<string, CategoryConfig>> = {
+    'mumbai': {
+      education: {
+        color: '#4CAF50',
+        icon: '🎓',
+        locations: [
+          {
+            name: 'IIT Bombay',
+            location: 'Powai, Mumbai, Maharashtra'
+          },
+          {
+            name: 'University of Mumbai',
+            location: 'Fort, Mumbai, Maharashtra'
+          },
+          {
+            name: 'St. Xavier\'s College',
+            location: 'Dhobi Talao, Mumbai, Maharashtra'
+          }
+        ]
+      },
+      healthcare: {
+        color: '#F44336',
+        icon: '🏥',
+        locations: [
+          {
+            name: 'Lilavati Hospital',
+            location: 'Bandra West, Mumbai, Maharashtra'
+          },
+          {
+            name: 'Breach Candy Hospital',
+            location: 'Breach Candy, Mumbai, Maharashtra'
+          },
+          {
+            name: 'Tata Memorial Hospital',
+            location: 'Parel, Mumbai, Maharashtra'
+          }
+        ]
+      },
+      tourism: {
+        color: '#2196F3',
+        icon: '🏛️',
+        locations: [
+          {
+            name: 'Gateway of India',
+            location: 'Apollo Bunder, Colaba, Mumbai'
+          },
+          {
+            name: 'Marine Drive',
+            location: 'Netaji Subhash Chandra Bose Road, Mumbai'
+          },
+          {
+            name: 'Juhu Beach',
+            location: 'Juhu, Mumbai, Maharashtra'
+          }
+        ]
+      }
+    },
+    'maharashtra': {
+      education: {
+        color: '#4CAF50',
+        icon: '🎓',
+        locations: [
+          {
+            name: 'Savitribai Phule Pune University',
+            location: 'Pune, Maharashtra'
+          },
+          {
+            name: 'VJTI',
+            location: 'Matunga, Mumbai, Maharashtra'
+          },
+          {
+            name: 'COEP',
+            location: 'Shivajinagar, Pune, Maharashtra'
+          }
+        ]
+      },
+      healthcare: {
+        color: '#F44336',
+        icon: '🏥',
+        locations: [
+          {
+            name: 'Ruby Hall Clinic',
+            location: 'Pune, Maharashtra'
+          },
+          {
+            name: 'Wockhardt Hospital',
+            location: 'Mumbai Central, Maharashtra'
+          },
+          {
+            name: 'Aditya Birla Hospital',
+            location: 'Pune, Maharashtra'
+          }
+        ]
+      },
+      tourism: {
+        color: '#2196F3',
+        icon: '🏛️',
+        locations: [
+          {
+            name: 'Ajanta Caves',
+            location: 'Aurangabad, Maharashtra'
+          },
+          {
+            name: 'Ellora Caves',
+            location: 'Aurangabad, Maharashtra'
+          },
+          {
+            name: 'Shirdi Sai Baba Temple',
+            location: 'Shirdi, Maharashtra'
+          }
+        ]
+      }
+    },
+    'delhi': {
+      education: {
+        color: '#4CAF50',
+        icon: '🎓',
+        locations: [
+          {
+            name: 'Delhi University',
+            location: 'North Campus, Delhi'
+          },
+          {
+            name: 'JNU',
+            location: 'New Delhi, Delhi'
+          },
+          {
+            name: 'IIT Delhi',
+            location: 'Hauz Khas, New Delhi'
+          }
+        ]
+      },
+      healthcare: {
+        color: '#F44336',
+        icon: '🏥',
+        locations: [
+          {
+            name: 'AIIMS Delhi',
+            location: 'Ansari Nagar, New Delhi'
+          },
+          {
+            name: 'Fortis Hospital',
+            location: 'Vasant Kunj, New Delhi'
+          },
+          {
+            name: 'Max Super Speciality Hospital',
+            location: 'Saket, New Delhi'
+          }
+        ]
+      },
+      tourism: {
+        color: '#2196F3',
+        icon: '🏛️',
+        locations: [
+          {
+            name: 'Red Fort',
+            location: 'Chandni Chowk, Delhi'
+          },
+          {
+            name: 'Qutub Minar',
+            location: 'Mehrauli, Delhi'
+          },
+          {
+            name: 'India Gate',
+            location: 'Rajpath, New Delhi'
+          }
+        ]
+      }
+    },
+    'karnataka': {
+      education: {
+        color: '#4CAF50',
+        icon: '🎓',
+        locations: [
+          {
+            name: 'IISc Bangalore',
+            location: 'Bangalore, Karnataka'
+          },
+          {
+            name: 'NITK Surathkal',
+            location: 'Mangalore, Karnataka'
+          },
+          {
+            name: 'Manipal Academy of Higher Education',
+            location: 'Manipal, Karnataka'
+          }
+        ]
+      },
+      healthcare: {
+        color: '#F44336',
+        icon: '🏥',
+        locations: [
+          {
+            name: 'Manipal Hospital',
+            location: 'Bangalore, Karnataka'
+          },
+          {
+            name: 'Apollo Hospital',
+            location: 'Bangalore, Karnataka'
+          },
+          {
+            name: 'Narayana Health City',
+            location: 'Bangalore, Karnataka'
+          }
+        ]
+      },
+      tourism: {
+        color: '#2196F3',
+        icon: '🏛️',
+        locations: [
+          {
+            name: 'Mysore Palace',
+            location: 'Mysore, Karnataka'
+          },
+          {
+            name: 'Hampi',
+            location: 'Bellary, Karnataka'
+          },
+          {
+            name: 'Coorg',
+            location: 'Madikeri, Karnataka'
+          }
+        ]
+      }
+    },
+    'tamil nadu': {
+      education: {
+        color: '#4CAF50',
+        icon: '🎓',
+        locations: [
+          {
+            name: 'IIT Madras',
+            location: 'Chennai, Tamil Nadu'
+          },
+          {
+            name: 'Anna University',
+            location: 'Chennai, Tamil Nadu'
+          },
+          {
+            name: 'NIT Trichy',
+            location: 'Tiruchirappalli, Tamil Nadu'
+          }
+        ]
+      },
+      healthcare: {
+        color: '#F44336',
+        icon: '🏥',
+        locations: [
+          {
+            name: 'Apollo Hospitals',
+            location: 'Greams Road, Chennai'
+          },
+          {
+            name: 'CMC Vellore',
+            location: 'Vellore, Tamil Nadu'
+          },
+          {
+            name: 'MIOT International',
+            location: 'Chennai, Tamil Nadu'
+          }
+        ]
+      },
+      tourism: {
+        color: '#2196F3',
+        icon: '🏛️',
+        locations: [
+          {
+            name: 'Meenakshi Temple',
+            location: 'Madurai, Tamil Nadu'
+          },
+          {
+            name: 'Marina Beach',
+            location: 'Chennai, Tamil Nadu'
+          },
+          {
+            name: 'Ooty',
+            location: 'Nilgiris, Tamil Nadu'
+          }
+        ]
+      }
+    },
     'new york': {
       education: {
         color: '#4CAF50',
@@ -808,7 +1087,6 @@ const getLocationData = (location: string): Record<string, CategoryConfig> => {
     }
   };
 
-  // Convert location to lowercase for case-insensitive matching
   const locationKey = location.toLowerCase();
   return locationData[locationKey] || {
     education: { color: '#4CAF50', icon: '🎓', locations: [] },
@@ -822,17 +1100,14 @@ export default function MapView({ location }: MapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  // Initialize map
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    // Clear existing map
     if (mapRef.current) {
       mapRef.current.remove();
       mapRef.current = null;
     }
 
-    // Create new map instance
     mapRef.current = L.map(mapContainerRef.current).setView([20, 0], 2);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
@@ -844,9 +1119,8 @@ export default function MapView({ location }: MapViewProps) {
         mapRef.current = null;
       }
     };
-  }, [location]); // Reinitialize map when location changes
+  }, [location]);
 
-  // Update map when location changes
   useEffect(() => {
     if (!location || !mapRef.current) return;
 
@@ -861,14 +1135,12 @@ export default function MapView({ location }: MapViewProps) {
           const lat = parseFloat(data[0].lat);
           const lng = parseFloat(data[0].lon);
 
-          // Clear existing markers
           mapRef.current?.eachLayer((layer) => {
             if (layer instanceof L.Marker) {
               layer.remove();
             }
           });
 
-          // Update view and add marker
           mapRef.current?.setView([lat, lng], 6);
           L.marker([lat, lng])
             .addTo(mapRef.current!)
@@ -892,7 +1164,6 @@ export default function MapView({ location }: MapViewProps) {
 
   const categories = getLocationData(location);
 
-  // Capitalize the first letter of each word in the location
   const capitalizedLocation = location
     .split(' ')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
@@ -900,7 +1171,6 @@ export default function MapView({ location }: MapViewProps) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-      {/* Map - Takes up 3 columns */}
       <div className="lg:col-span-3">
         <div 
           ref={mapContainerRef}
@@ -908,7 +1178,6 @@ export default function MapView({ location }: MapViewProps) {
         />
       </div>
 
-      {/* Categories - Takes up 1 column */}
       <div className="space-y-4 max-h-[600px] overflow-y-auto">
         {Object.entries(categories).map(([category, config]) => (
           <Card key={category} className="p-4">
