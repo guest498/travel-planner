@@ -72,13 +72,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Track user history
-      await storage.createUserHistory({
-        userId: req.user!.id,
-        searchQuery: message,
-        location: location || null,
-        category: null
-      });
+      // Track user history using the new method
+      await storage.addSearchHistory(
+        req.user!.id,
+        message,
+        location || null,
+        null
+      );
 
       // Craft the AI prompt
       let aiPrompt = `You are a travel assistant. `;
