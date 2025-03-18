@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import ChatInterface from '@/components/chat-interface';
 import MapView from '@/components/map-view';
@@ -17,6 +17,7 @@ export default function Home() {
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [searchCategory, setSearchCategory] = useState<string | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const addFavoriteMutation = useMutation({
     mutationFn: async (location: string) => {
@@ -24,6 +25,7 @@ export default function Home() {
       return response.json();
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/favorites'] });
       toast({
         title: "Location saved",
         description: "Added to your favorites!",

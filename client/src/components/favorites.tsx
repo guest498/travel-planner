@@ -18,6 +18,7 @@ export default function Favorites({ onSelect }: FavoritesProps) {
 
   const { data: favorites = [], isLoading } = useQuery<Favorite[]>({
     queryKey: ['/api/favorites'],
+    refetchInterval: 2000, // Refetch every 2 seconds
   });
 
   const deleteFavoriteMutation = useMutation({
@@ -34,7 +35,14 @@ export default function Favorites({ onSelect }: FavoritesProps) {
   });
 
   if (isLoading) {
-    return <div>Loading favorites...</div>;
+    return (
+      <Card className="p-4">
+        <div className="flex items-center gap-2">
+          <Heart className="h-5 w-5 text-primary animate-pulse" />
+          <p>Loading favorites...</p>
+        </div>
+      </Card>
+    );
   }
 
   return (
