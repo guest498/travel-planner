@@ -21,7 +21,7 @@ export interface IStorage {
   getFavorite(id: number): Promise<Favorite | undefined>;
   createFavorite(favorite: InsertFavorite): Promise<Favorite>;
   deleteFavorite(id: number): Promise<void>;
-  getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   getUser(id: number): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   addSearchHistory(userId: number, query: string, location: string | null, category: string | null): Promise<void>;
@@ -34,7 +34,7 @@ export class MemStorage implements IStorage {
   private weatherCache: Map<string, WeatherCache>;
   private favorites: Map<number, Favorite>;
   private users: Map<number, User>;
-  private usersByUsername: Map<string, User>;
+  private usersByEmail: Map<string, User>;
   private searchHistory: Map<number, SearchHistoryEntry[]>;
   private currentId: number;
   sessionStore: session.Store;
@@ -44,7 +44,7 @@ export class MemStorage implements IStorage {
     this.weatherCache = new Map();
     this.favorites = new Map();
     this.users = new Map();
-    this.usersByUsername = new Map();
+    this.usersByEmail = new Map();
     this.searchHistory = new Map();
     this.currentId = 1;
     this.sessionStore = new MemoryStore({
@@ -114,8 +114,8 @@ export class MemStorage implements IStorage {
     this.favorites.delete(id);
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return this.usersByUsername.get(username);
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return this.usersByEmail.get(email);
   }
 
   async getUser(id: number): Promise<User | undefined> {
@@ -123,20 +123,20 @@ export class MemStorage implements IStorage {
   }
 
   async createUser(user: InsertUser): Promise<User> {
-    const existingUser = await this.getUserByUsername(user.username);
+    const existingUser = await this.getUserByEmail(user.email);
     if (existingUser) {
-      throw new Error("Username already exists");
+      throw new Error("Email already exists");
     }
 
     const id = this.currentId++;
     const newUser: User = {
       id,
-      username: user.username,
+      email: user.email,
       password: user.password,
       createdAt: new Date()
     };
     this.users.set(id, newUser);
-    this.usersByUsername.set(user.username, newUser);
+    this.usersByEmail.set(user.email, newUser);
     return newUser;
   }
 
