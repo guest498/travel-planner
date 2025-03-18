@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Loader2, Globe } from "lucide-react";
+import { Send, Loader2, Globe, History } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import type { Message } from '@shared/schema';
 import WeatherCard from './weather-card';
@@ -22,11 +22,11 @@ interface ChatInterfaceProps {
   onLocationSelect: (location: string, category?: string) => void;
 }
 
-interface ChatResponse {
-  message: Message;
-  location?: string | null;
-  category?: string | null;
-  translations?: Record<string, string>;
+interface SearchHistoryEntry {
+  query: string;
+  location: string | null;
+  category: string | null;
+  timestamp: Date;
 }
 
 const SUPPORTED_LANGUAGES = {
@@ -107,6 +107,13 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
     setInput('');
   };
 
+  // Add query for search history
+  const { data: searchHistory } = useQuery({
+    queryKey: ['/api/search-history'],
+    refetchInterval: 5000, // Refresh every 5 seconds
+  });
+
+
   return (
     <div className="flex flex-col gap-4">
       <Card className="h-[600px] flex flex-col">
@@ -132,6 +139,40 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
               </Select>
             </div>
           </div>
+
+          {/* Add Search History Section */}
+          {searchHistory && searchHistory.length > 0 && (
+            <div className="mt-4 pt-4 border-t">
+              <div className="flex items-center gap-2 mb-2 text-sm text-muted-foreground">
+                <History className="h-4 w-4" />
+                <span>Recent Searches</span>
+              </div>
+              <div className="space-y-2">
+                {searchHistory.map((entry: SearchHistoryEntry, index: number) => (
+                  <div 
+                    key={index}
+                    className="text-sm p-2 bg-muted rounded-md cursor-pointer hover:bg-muted/80"
+                    onClick={() => {
+                      setInput(entry.query);
+                      if (entry.location) {
+                        onLocationSelect(entry.location, entry.category || undefined);
+                      }
+                    }}
+                  >
+                    <div className="font-medium">{entry.query}</div>
+                    {entry.location && (
+                      <div className="text-xs text-muted-foreground">
+                        Location: {entry.location}
+                      </div>
+                    )}
+                    <div className="text-xs text-muted-foreground">
+                      {new Date(entry.timestamp).toLocaleString()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <ScrollArea className="flex-1 p-4">
@@ -200,4 +241,11 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
       )}
     </div>
   );
+}
+
+interface ChatResponse {
+  message: Message;
+  location?: string | null;
+  category?: string | null;
+  translations?: Record<string, string>;
 }

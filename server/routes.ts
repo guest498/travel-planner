@@ -253,6 +253,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add new route to get search history
+  app.get('/api/search-history', ensureAuthenticated, async (req, res) => {
+    try {
+      const history = await storage.getRecentSearches(req.user!.id);
+      res.json(history);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
