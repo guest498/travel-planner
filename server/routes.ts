@@ -6,8 +6,6 @@ import { z } from "zod";
 import { insertFavoriteSchema } from "@shared/schema";
 import { setupAuth } from "./auth";
 import fetch from 'node-fetch';
-import { hashPassword, comparePasswords } from './auth'; // Assuming these functions exist
-
 
 function ensureAuthenticated(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
   if (req.isAuthenticated()) {
@@ -159,71 +157,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         temperature: Math.round(Math.random() * 30),
         condition: ['Clear', 'Cloudy', 'Rain', 'Snow'][Math.floor(Math.random() * 4)],
         humidity: Math.round(Math.random() * 100),
-        windSpeed: Math.round(Math.random() * 30),
-        icon: '☀️' // Default icon
+        windSpeed: Math.round(Math.random() * 30)
       };
-
-      // Set weather icon based on condition
-      switch (weatherData.condition) {
-        case 'Clear':
-          weatherData.icon = '☀️';
-          break;
-        case 'Cloudy':
-          weatherData.icon = '☁️';
-          break;
-        case 'Rain':
-          weatherData.icon = '🌧️';
-          break;
-        case 'Snow':
-          weatherData.icon = '🌨️';
-          break;
-      }
-
-      // Generate travel recommendations based on weather
-      const recommendations = [];
-
-      if (weatherData.condition === 'Clear') {
-        recommendations.push({
-          activity: 'Outdoor Sightseeing',
-          reason: 'Perfect weather for exploring landmarks and taking photos',
-          bestTime: 'Throughout the day'
-        });
-      } else if (weatherData.condition === 'Cloudy') {
-        recommendations.push({
-          activity: 'Museum Tours',
-          reason: 'Great day for indoor cultural activities',
-          bestTime: 'Late morning to afternoon'
-        });
-      } else if (weatherData.condition === 'Rain') {
-        recommendations.push({
-          activity: 'Local Cuisine Experience',
-          reason: 'Ideal time to explore indoor markets and restaurants',
-          bestTime: 'Lunch and dinner hours'
-        });
-      } else if (weatherData.condition === 'Snow') {
-        recommendations.push({
-          activity: 'Winter Sports',
-          reason: 'Perfect conditions for snow activities',
-          bestTime: 'Early morning for best snow conditions'
-        });
-      }
-
-      // Add a general recommendation based on temperature
-      if (weatherData.temperature > 25) {
-        recommendations.push({
-          activity: 'Water Activities',
-          reason: 'High temperature perfect for cooling off',
-          bestTime: 'Mid-morning or late afternoon'
-        });
-      } else if (weatherData.temperature < 10) {
-        recommendations.push({
-          activity: 'Indoor Attractions',
-          reason: 'Stay warm while enjoying local culture',
-          bestTime: 'Anytime during operating hours'
-        });
-      }
-
-      res.json({ weather: weatherData, recommendations });
+      res.json(weatherData);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -314,60 +250,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ imageUrl: response.data[0].url });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
-    }
-  });
-
-  app.get('/api/user/history', ensureAuthenticated, async (req, res) => {
-    try {
-      const history = await storage.getUserHistory(req.user!.id);
-      res.json(history);
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  app.post('/api/register', async (req, res, next) => {
-    try {
-      if (req.body.email !== 'tcsguest.7650@gmail.com') {
-        return res.status(400).json({
-          error: 'Only tcsguest.7650@gmail.com is allowed to register'
-        });
-      }
-
-      const existingUser = await storage.getUserByEmail(req.body.email);
-      if (existingUser) {
-        return res.status(400).json({ error: "Email already exists" });
-      }
-
-      const user = await storage.createUser({
-        ...req.body,
-        password: await hashPassword(req.body.password),
-      });
-
-      req.login(user, (err) => {
-        if (err) return next(err);
-        res.status(201).json(user);
-      });
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  });
-
-  app.post('/api/login', async (req, res, next) => {
-    try {
-      const { email, password } = req.body;
-
-      const user = await storage.getUserByEmail(email);
-      if (!user || !(await comparePasswords(password, user.password))) {
-        return res.status(401).json({ error: 'Invalid email or password' });
-      }
-
-      req.login(user, (err) => {
-        if (err) return next(err);
-        res.json(user);
-      });
-    } catch (error: any) {
-      next(error);
     }
   });
 

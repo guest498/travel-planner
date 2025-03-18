@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Loader2, Globe, History } from "lucide-react";
+import { Send, Loader2, Globe } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -44,10 +44,6 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
   const [input, setInput] = useState('');
   const [currentLocation, setCurrentLocation] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState('en');
-  const [searchHistory, setSearchHistory] = useState<Array<{
-    query: string;
-    timestamp: Date;
-  }>>([]);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -82,12 +78,6 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
         timestamp: Date.now()
       }]);
 
-      // Keep only the last 10 searches
-      setSearchHistory(prev => [{
-        query: input,
-        timestamp: new Date()
-      }, ...prev].slice(0, 10));
-
       if (data.location) {
         setCurrentLocation(data.location);
         onLocationSelect(data.location, data.category);
@@ -119,25 +109,6 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
 
   return (
     <div className="flex flex-col gap-4">
-      {searchHistory.length > 0 && (
-        <Card className="p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <History className="h-4 w-4" />
-            <h3 className="text-sm font-medium">Recent Searches</h3>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {searchHistory.map((item, index) => (
-              <div
-                key={index}
-                className="text-xs bg-muted px-2 py-1 rounded-full"
-              >
-                {item.query}
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
       <Card className="h-[600px] flex flex-col">
         <div className="p-4 border-b">
           <div className="flex items-center justify-between">
@@ -175,7 +146,7 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
                     msg.role === 'user'
                       ? 'bg-primary text-primary-foreground ml-4'
                       : 'bg-muted mr-4'
-                    }`}
+                  }`}
                 >
                   {msg.content}
                 </div>

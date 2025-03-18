@@ -14,10 +14,9 @@ export interface IStorage {
   getFavorite(id: number): Promise<Favorite | undefined>;
   createFavorite(favorite: InsertFavorite): Promise<Favorite>;
   deleteFavorite(id: number): Promise<void>;
-  getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
   getUser(id: number): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  getUserHistory(userId: number): Promise<UserHistory[]>;
   createUserHistory(history: InsertUserHistory): Promise<UserHistory>;
   sessionStore: session.Store;
 }
@@ -27,7 +26,7 @@ export class MemStorage implements IStorage {
   private weatherCache: Map<string, WeatherCache>;
   private favorites: Map<number, Favorite>;
   private users: Map<number, User>;
-  private usersByEmail: Map<string, User>;
+  private usersByUsername: Map<string, User>;
   private userHistory: Map<number, UserHistory>;
   private currentId: number;
   sessionStore: session.Store;
@@ -37,7 +36,7 @@ export class MemStorage implements IStorage {
     this.weatherCache = new Map();
     this.favorites = new Map();
     this.users = new Map();
-    this.usersByEmail = new Map();
+    this.usersByUsername = new Map();
     this.userHistory = new Map();
     this.currentId = 1;
     this.sessionStore = new MemoryStore({
@@ -107,8 +106,8 @@ export class MemStorage implements IStorage {
     this.favorites.delete(id);
   }
 
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    return this.usersByEmail.get(email);
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    return this.usersByUsername.get(username);
   }
 
   async getUser(id: number): Promise<User | undefined> {
@@ -116,28 +115,22 @@ export class MemStorage implements IStorage {
   }
 
   async createUser(user: InsertUser): Promise<User> {
-    // Check if email already exists
-    const existingUser = await this.getUserByEmail(user.email);
+    // Check if username already exists
+    const existingUser = await this.getUserByUsername(user.username);
     if (existingUser) {
-      throw new Error("Email already exists");
+      throw new Error("Username already exists");
     }
 
     const id = this.currentId++;
     const newUser: User = {
       id,
-      email: user.email,
+      username: user.username,
       password: user.password,
       createdAt: new Date()
     };
     this.users.set(id, newUser);
-    this.usersByEmail.set(user.email, newUser);
+    this.usersByUsername.set(user.username, newUser);
     return newUser;
-  }
-
-  async getUserHistory(userId: number): Promise<UserHistory[]> {
-    return Array.from(this.userHistory.values())
-      .filter(h => h.userId === userId)
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
   }
 
   async createUserHistory(history: InsertUserHistory): Promise<UserHistory> {
