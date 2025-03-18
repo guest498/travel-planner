@@ -1532,7 +1532,63 @@ const getLocationData = (location: string): Record<string, CategoryConfig> => {
           }
         ]
       }
-    }
+    },
+    'new delhi': {
+      education: {
+        color: '#4CAF50',
+        icon: '🎓',
+        locations: [
+          {
+            name: 'Indian Institute of Technology Delhi',
+            location: 'Hauz Khas, New Delhi'
+          },
+          {
+            name: 'Jawaharlal Nehru University',
+            location: 'New Mehrauli Road, New Delhi'
+          },
+          {
+            name: 'Delhi Technological University',
+            location: 'Shahbad Daulatpur, New Delhi'
+          }
+        ]
+      },
+      healthcare: {
+        color: '#F44336',
+        icon: '🏥',
+        locations: [
+          {
+            name: 'All India Institute of Medical Sciences',
+            location: 'Ansari Nagar East, New Delhi'
+          },
+          {
+            name: 'Safdarjung Hospital',
+            location: 'Ansari Nagar West, New Delhi'
+          },
+          {
+            name: 'Ram Manohar Lohia Hospital',
+            location: 'Baba Kharak Singh Marg, New Delhi'
+          }
+        ]
+      },
+      tourism: {
+        color: '#2196F3',
+        icon: '🏛️',
+        locations: [
+          {
+            name: 'India Gate',
+            location: 'Rajpath, New Delhi'
+          },
+          {
+            name: 'Qutub Minar',
+            location: 'Mehrauli, New Delhi'
+          },
+          {
+            name: 'Lotus Temple',
+            location: 'Lotus Temple Road, New Delhi'
+          }
+        ]
+      }
+    },
   };
 
   const locationKey = location.toLowerCase();
