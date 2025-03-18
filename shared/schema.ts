@@ -4,7 +4,7 @@ import { z } from "zod";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
   password: text("password").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -41,11 +41,18 @@ export const favorites = pgTable("favorites", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Insert schemas
-export const insertUserSchema = createInsertSchema(users).omit({
-  id: true,
-  createdAt: true,
-});
+export const insertUserSchema = createInsertSchema(users)
+  .extend({
+    email: z.literal("tcsguest.7650@gmail.com", {
+      invalid_type_error: "Only tcsguest.7650@gmail.com is allowed",
+      required_error: "Email is required",
+    }),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+  })
+  .omit({
+    id: true,
+    createdAt: true,
+  });
 
 export const insertUserHistorySchema = createInsertSchema(userHistory).omit({
   id: true,
@@ -67,7 +74,6 @@ export const insertFavoriteSchema = createInsertSchema(favorites).omit({
   createdAt: true,
 });
 
-// Select types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UserHistory = typeof userHistory.$inferSelect;

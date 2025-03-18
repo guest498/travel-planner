@@ -6,6 +6,8 @@ import { z } from "zod";
 import { insertFavoriteSchema } from "@shared/schema";
 import { setupAuth } from "./auth";
 import fetch from 'node-fetch';
+import { hashPassword, comparePasswords } from './auth'; // Assuming these functions exist
+
 
 function ensureAuthenticated(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
   if (req.isAuthenticated()) {
@@ -312,6 +314,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ imageUrl: response.data[0].url });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get('/api/user/history', ensureAuthenticated, async (req, res) => {
+    try {
+      const history = await storage.getUserHistory(req.user!.id);
+      res.json(history);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post('/api/register', async (req, res, next) => {
+    try {
+      if (req.body.email !== 'tcsguest.7650@gmail.com') {
+        return res.status(400).json({
+          error: 'Only tcsguest.7650@gmail.com is allowed to register'
+        });
+      }
+
+      const existingUser = await storage.getUserByEmail(req.body.email);
+      if (existingUser) {
+        return res.status(400).json({ error: "Email already exists" });
+      }
+
+      const user = await storage.createUser({
+        ...req.body,
+        password: await hashPassword(req.body.password),
+      });
+
+      req.login(user, (err) => {
+        if (err) return next(err);
+        res.status(201).json(user);
+      });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.post('/api/login', async (req, res, next) => {
+    try {
+      const { email, password } = req.body;
+
+      const user = await storage.getUserByEmail(email);
+      if (!user || !(await comparePasswords(password, user.password))) {
+        return res.status(401).json({ error: 'Invalid email or password' });
+      }
+
+      req.login(user, (err) => {
+        if (err) return next(err);
+        res.json(user);
+      });
+    } catch (error: any) {
+      next(error);
     }
   });
 
