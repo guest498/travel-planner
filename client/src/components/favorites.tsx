@@ -20,20 +20,6 @@ export default function Favorites({ onSelect }: FavoritesProps) {
     queryKey: ['/api/favorites'],
   });
 
-  const addFavoriteMutation = useMutation({
-    mutationFn: async (location: string) => {
-      const response = await apiRequest('POST', '/api/favorites', { location });
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/favorites'] });
-      toast({
-        title: "Location saved",
-        description: "Added to your favorites!",
-      });
-    },
-  });
-
   const deleteFavoriteMutation = useMutation({
     mutationFn: async (id: number) => {
       await apiRequest('DELETE', `/api/favorites/${id}`);
@@ -69,7 +55,7 @@ export default function Favorites({ onSelect }: FavoritesProps) {
                 onClick={() => onSelect(favorite.location)}
                 className="text-left flex-1"
               >
-                <p className="font-medium">{favorite.location}</p>
+                <p className="font-medium capitalize">{favorite.location}</p>
                 {favorite.notes && (
                   <p className="text-sm text-muted-foreground">{favorite.notes}</p>
                 )}
