@@ -199,7 +199,6 @@ export default function AuthPage() {
           <ul className="text-left space-y-2 list-disc list-inside">
             <li>Save your favorite locations</li>
             <li>Get personalized travel recommendations</li>
-            <li>Access real-time weather updates</li>
             <li>Explore local attractions and services</li>
             <li>Track your travel history</li>
           </ul>
