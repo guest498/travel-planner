@@ -47,7 +47,6 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [searchHistory, setSearchHistory] = useState<Array<{
     query: string;
-    location: string | null;
     timestamp: Date;
   }>>([]);
   const [messages, setMessages] = useState<Message[]>([
@@ -84,15 +83,14 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
         timestamp: Date.now()
       }]);
 
+      setSearchHistory(prev => [{
+        query: input,
+        timestamp: new Date()
+      }, ...prev]);
+
       if (data.location) {
         setCurrentLocation(data.location);
         onLocationSelect(data.location, data.category);
-        // Add to search history
-        setSearchHistory(prev => [{
-          query: input,
-          location: data.location,
-          timestamp: new Date()
-        }, ...prev]);
       }
     },
     onError: (error: Error) => {
@@ -121,7 +119,6 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-      {/* Chat Interface - Takes up 3 columns */}
       <div className="lg:col-span-3 space-y-4">
         <Card className="h-[600px] flex flex-col">
           <div className="p-4 border-b">
@@ -160,7 +157,7 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
                       msg.role === 'user'
                         ? 'bg-primary text-primary-foreground ml-4'
                         : 'bg-muted mr-4'
-                    }`}
+                      }`}
                   >
                     {msg.content}
                   </div>
@@ -214,7 +211,6 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
         )}
       </div>
 
-      {/* Search History - Takes up 1 column */}
       <div className="lg:col-span-1">
         <SearchHistory
           searchQueries={searchHistory}
