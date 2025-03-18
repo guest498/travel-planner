@@ -1,8 +1,15 @@
-import type { Conversation, InsertConversation, WeatherCache, InsertWeatherCache, Favorite, InsertFavorite, User, InsertUser, UserHistory, InsertUserHistory } from "@shared/schema";
+import type { Conversation, InsertConversation, WeatherCache, InsertWeatherCache, Favorite, InsertFavorite, User, InsertUser } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 
 const MemoryStore = createMemoryStore(session);
+
+interface SearchHistoryEntry {
+  query: string;
+  location: string | null;
+  category: string | null;
+  timestamp: Date;
+}
 
 export interface IStorage {
   getConversation(id: number): Promise<Conversation | undefined>;
@@ -17,7 +24,8 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   getUser(id: number): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  createUserHistory(history: InsertUserHistory): Promise<UserHistory>;
+  addSearchHistory(userId: number, query: string, location: string | null, category: string | null): Promise<void>;
+  getRecentSearches(userId: number): Promise<SearchHistoryEntry[]>;
   sessionStore: session.Store;
 }
 
@@ -27,7 +35,7 @@ export class MemStorage implements IStorage {
   private favorites: Map<number, Favorite>;
   private users: Map<number, User>;
   private usersByUsername: Map<string, User>;
-  private userHistory: Map<number, UserHistory>;
+  private searchHistory: Map<number, SearchHistoryEntry[]>;
   private currentId: number;
   sessionStore: session.Store;
 
@@ -37,7 +45,7 @@ export class MemStorage implements IStorage {
     this.favorites = new Map();
     this.users = new Map();
     this.usersByUsername = new Map();
-    this.userHistory = new Map();
+    this.searchHistory = new Map();
     this.currentId = 1;
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000, // 24 hours
@@ -54,7 +62,7 @@ export class MemStorage implements IStorage {
       id,
       createdAt: new Date(),
       messages: conversation.messages,
-      location: conversation.location,
+      location: conversation.location ?? null,
       userId: conversation.userId
     };
     this.conversations.set(id, newConversation);
@@ -115,7 +123,6 @@ export class MemStorage implements IStorage {
   }
 
   async createUser(user: InsertUser): Promise<User> {
-    // Check if username already exists
     const existingUser = await this.getUserByUsername(user.username);
     if (existingUser) {
       throw new Error("Username already exists");
@@ -133,18 +140,26 @@ export class MemStorage implements IStorage {
     return newUser;
   }
 
-  async createUserHistory(history: InsertUserHistory): Promise<UserHistory> {
-    const id = this.currentId++;
-    const newHistory: UserHistory = {
-      id,
-      userId: history.userId,
-      searchQuery: history.searchQuery,
-      location: history.location,
-      category: history.category,
+  async addSearchHistory(userId: number, query: string, location: string | null, category: string | null): Promise<void> {
+    const userHistory = this.searchHistory.get(userId) || [];
+    const newEntry: SearchHistoryEntry = {
+      query,
+      location,
+      category,
       timestamp: new Date()
     };
-    this.userHistory.set(id, newHistory);
-    return newHistory;
+
+    // Keep only the last 10 searches
+    userHistory.unshift(newEntry);
+    if (userHistory.length > 10) {
+      userHistory.pop();
+    }
+
+    this.searchHistory.set(userId, userHistory);
+  }
+
+  async getRecentSearches(userId: number): Promise<SearchHistoryEntry[]> {
+    return this.searchHistory.get(userId) || [];
   }
 }
 

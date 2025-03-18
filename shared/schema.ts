@@ -9,15 +9,6 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const userHistory = pgTable("user_history", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
-  searchQuery: text("search_query").notNull(),
-  location: text("location"),
-  category: text("category"),
-  timestamp: timestamp("timestamp").defaultNow(),
-});
-
 export const conversations = pgTable("conversations", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
@@ -47,11 +38,6 @@ export const insertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
 });
 
-export const insertUserHistorySchema = createInsertSchema(userHistory).omit({
-  id: true,
-  timestamp: true,
-});
-
 export const insertConversationSchema = createInsertSchema(conversations).omit({
   id: true,
   createdAt: true,
@@ -70,8 +56,6 @@ export const insertFavoriteSchema = createInsertSchema(favorites).omit({
 // Select types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
-export type UserHistory = typeof userHistory.$inferSelect;
-export type InsertUserHistory = z.infer<typeof insertUserHistorySchema>;
 export type Conversation = typeof conversations.$inferSelect;
 export type InsertConversation = z.infer<typeof insertConversationSchema>;
 export type WeatherCache = typeof weatherCache.$inferSelect;
