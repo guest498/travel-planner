@@ -1084,6 +1084,454 @@ const getLocationData = (location: string): Record<string, CategoryConfig> => {
           }
         ]
       }
+    },
+    'gujarat': {
+      education: {
+        color: '#4CAF50',
+        icon: '🎓',
+        locations: [
+          {
+            name: 'IIT Gandhinagar',
+            location: 'Gandhinagar, Gujarat'
+          },
+          {
+            name: 'NIRMA University',
+            location: 'Ahmedabad, Gujarat'
+          },
+          {
+            name: 'MS University',
+            location: 'Vadodara, Gujarat'
+          }
+        ]
+      },
+      healthcare: {
+        color: '#F44336',
+        icon: '🏥',
+        locations: [
+          {
+            name: 'Sterling Hospital',
+            location: 'Ahmedabad, Gujarat'
+          },
+          {
+            name: 'Apollo Hospital',
+            location: 'Gandhinagar, Gujarat'
+          },
+          {
+            name: 'UN Mehta Heart Institute',
+            location: 'Ahmedabad, Gujarat'
+          }
+        ]
+      },
+      tourism: {
+        color: '#2196F3',
+        icon: '🏛️',
+        locations: [
+          {
+            name: 'Statue of Unity',
+            location: 'Kevadia, Gujarat'
+          },
+          {
+            name: 'Rann of Kutch',
+            location: 'Kutch, Gujarat'
+          },
+          {
+            name: 'Somnath Temple',
+            location: 'Somnath, Gujarat'
+          }
+        ]
+      }
+    },
+    'rajasthan': {
+      education: {
+        color: '#4CAF50',
+        icon: '🎓',
+        locations: [
+          {
+            name: 'IIT Jodhpur',
+            location: 'Jodhpur, Rajasthan'
+          },
+          {
+            name: 'BITS Pilani',
+            location: 'Pilani, Rajasthan'
+          },
+          {
+            name: 'Rajasthan University',
+            location: 'Jaipur, Rajasthan'
+          }
+        ]
+      },
+      healthcare: {
+        color: '#F44336',
+        icon: '🏥',
+        locations: [
+          {
+            name: 'Fortis Hospital',
+            location: 'Jaipur, Rajasthan'
+          },
+          {
+            name: 'AIIMS Jodhpur',
+            location: 'Jodhpur, Rajasthan'
+          },
+          {
+            name: 'Narayana Hospital',
+            location: 'Jaipur, Rajasthan'
+          }
+        ]
+      },
+      tourism: {
+        color: '#2196F3',
+        icon: '🏛️',
+        locations: [
+          {
+            name: 'Hawa Mahal',
+            location: 'Jaipur, Rajasthan'
+          },
+          {
+            name: 'Mehrangarh Fort',
+            location: 'Jodhpur, Rajasthan'
+          },
+          {
+            name: 'City Palace',
+            location: 'Udaipur, Rajasthan'
+          }
+        ]
+      }
+    },
+    'west bengal': {
+      education: {
+        color: '#4CAF50',
+        icon: '🎓',
+        locations: [
+          {
+            name: 'IIT Kharagpur',
+            location: 'Kharagpur, West Bengal'
+          },
+          {
+            name: 'Jadavpur University',
+            location: 'Kolkata, West Bengal'
+          },
+          {
+            name: 'Presidency University',
+            location: 'Kolkata, West Bengal'
+          }
+        ]
+      },
+      healthcare: {
+        color: '#F44336',
+        icon: '🏥',
+        locations: [
+          {
+            name: 'SSKM Hospital',
+            location: 'Kolkata, West Bengal'
+          },
+          {
+            name: 'Apollo Gleneagles',
+            location: 'Kolkata, West Bengal'
+          },
+          {
+            name: 'Medica Superspecialty Hospital',
+            location: 'Kolkata, West Bengal'
+          }
+        ]
+      },
+      tourism: {
+        color: '#2196F3',
+        icon: '🏛️',
+        locations: [
+          {
+            name: 'Victoria Memorial',
+            location: 'Kolkata, West Bengal'
+          },
+          {
+            name: 'Darjeeling',
+            location: 'Darjeeling, West Bengal'
+          },
+          {
+            name: 'Sundarbans',
+            location: 'South 24 Parganas, West Bengal'
+          }
+        ]
+      }
+    },
+    'kerala': {
+      education: {
+        color: '#4CAF50',
+        icon: '🎓',
+        locations: [
+          {
+            name: 'IIT Palakkad',
+            location: 'Palakkad, Kerala'
+          },
+          {
+            name:'University of Kerala',
+            location: 'Thiruvananthapuram, Kerala'
+          },
+          {
+            name: 'NIT Calicut',
+            location: 'Kozhikode, Kerala'
+          }
+        ]
+      },
+      healthcare: {
+        color: '#F44336',
+        icon: '🏥',
+        locations: [
+          {
+            name: 'KIMS Hospital',
+            location: 'Thiruvananthapuram, Kerala'
+          },
+          {
+            name: 'Amrita Hospital',
+            location: 'Kochi, Kerala'
+          },
+          {
+            name: 'Medical Trust Hospital',
+            location: 'Kochi, Kerala'
+          }
+        ]
+      },
+      tourism: {
+        color: '#2196F3',
+        icon: '🏛️',
+        locations: [
+          {
+            name: 'Alleppey Backwaters',
+            location: 'Alappuzha, Kerala'
+          },
+          {
+            name: 'Munnar',
+            location: 'Idukki, Kerala'
+          },
+          {
+            name: 'Kovalam Beach',
+            location: 'Thiruvananthapuram, Kerala'
+          }
+        ]
+      }
+    },
+    'madhya pradesh': {
+      education: {
+        color: '#4CAF50',
+        icon: '🎓',
+        locations: [
+          {
+            name: 'IIT Indore',
+            location: 'Indore, Madhya Pradesh'
+          },
+          {
+            name: 'IIITDM Jabalpur',
+            location: 'Jabalpur, Madhya Pradesh'
+          },
+          {
+            name: 'MANIT',
+            location: 'Bhopal, Madhya Pradesh'
+          }
+        ]
+      },
+      healthcare: {
+        color: '#F44336',
+        icon: '🏥',
+        locations: [
+          {
+            name: 'AIIMS Bhopal',
+            location: 'Bhopal, Madhya Pradesh'
+          },
+          {
+            name: 'Bombay Hospital',
+            location: 'Indore, Madhya Pradesh'
+          },
+          {
+            name: 'CHL Hospital',
+            location: 'Indore, Madhya Pradesh'
+          }
+        ]
+      },
+      tourism: {
+        color: '#2196F3',
+        icon: '🏛️',
+        locations: [
+          {
+            name: 'Khajuraho Temples',
+            location: 'Khajuraho, Madhya Pradesh'
+          },
+          {
+            name: 'Sanchi Stupa',
+            location: 'Sanchi, Madhya Pradesh'
+          },
+          {
+            name: 'Bandhavgarh National Park',
+            location: 'Umaria, Madhya Pradesh'
+          }
+        ]
+      }
+    },
+    'uttar pradesh': {
+      education: {
+        color: '#4CAF50',
+        icon: '🎓',
+        locations: [
+          {
+            name: 'IIT Kanpur',
+            location: 'Kanpur, Uttar Pradesh'
+          },
+          {
+            name: 'BHU',
+            location: 'Varanasi, Uttar Pradesh'
+          },
+          {
+            name: 'Aligarh Muslim University',
+            location: 'Aligarh, Uttar Pradesh'
+          }
+        ]
+      },
+      healthcare: {
+        color: '#F44336',
+        icon: '🏥',
+        locations: [
+          {
+            name: 'SGPGI',
+            location: 'Lucknow, Uttar Pradesh'
+          },
+          {
+            name: 'King George Medical University',
+            location: 'Lucknow, Uttar Pradesh'
+          },
+          {
+            name: 'Medanta Hospital',
+            location: 'Lucknow, Uttar Pradesh'
+          }
+        ]
+      },
+      tourism: {
+        color: '#2196F3',
+        icon: '🏛️',
+        locations: [
+          {
+            name: 'Taj Mahal',
+            location: 'Agra, Uttar Pradesh'
+          },
+          {
+            name: 'Varanasi Ghats',
+            location: 'Varanasi, Uttar Pradesh'
+          },
+          {
+            name: 'Fatehpur Sikri',
+            location: 'Agra, Uttar Pradesh'
+          }
+        ]
+      }
+    },
+    'punjab': {
+      education: {
+        color: '#4CAF50',
+        icon: '🎓',
+        locations: [
+          {
+            name: 'IIT Ropar',
+            location: 'Rupnagar, Punjab'
+          },
+          {
+            name: 'Punjab University',
+            location: 'Chandigarh, Punjab'
+          },
+          {
+            name: 'Thapar University',
+            location: 'Patiala, Punjab'
+          }
+        ]
+      },
+      healthcare: {
+        color: '#F44336',
+        icon: '🏥',
+        locations: [
+          {
+            name: 'PGIMER',
+            location: 'Chandigarh, Punjab'
+          },
+          {
+            name: 'Apollo Hospital',
+            location: 'Ludhiana, Punjab'
+          },
+          {
+            name: 'Fortis Hospital',
+            location: 'Mohali, Punjab'
+          }
+        ]
+      },
+      tourism: {
+        color: '#2196F3',
+        icon: '🏛️',
+        locations: [
+          {
+            name: 'Golden Temple',
+            location: 'Amritsar, Punjab'
+          },
+          {
+            name: 'Jallianwala Bagh',
+            location: 'Amritsar, Punjab'
+          },
+          {
+            name: 'Wagah Border',
+            location: 'Amritsar, Punjab'
+          }
+        ]
+      }
+    },
+    'south korea': {
+      education: {
+        color: '#4CAF50',
+        icon: '🎓',
+        locations: [
+          {
+            name: 'Seoul National University',
+            location: 'Gwanak-gu, Seoul, South Korea'
+          },
+          {
+            name: 'Korea Advanced Institute of Science and Technology',
+            location: 'Daejeon, South Korea'
+          },
+          {
+            name: 'Yonsei University',
+            location: 'Seodaemun-gu, Seoul, South Korea'
+          }
+        ]
+      },
+      healthcare: {
+        color: '#F44336',
+        icon: '🏥',
+        locations: [
+          {
+            name: 'Samsung Medical Center',
+            location: 'Gangnam-gu, Seoul, South Korea'
+          },
+          {
+            name: 'Asan Medical Center',
+            location: 'Songpa-gu, Seoul, South Korea'
+          },
+          {
+            name: 'Severance Hospital',
+            location: 'Seodaemun-gu, Seoul, South Korea'
+          }
+        ]
+      },
+      tourism: {
+        color: '#2196F3',
+        icon: '🏛️',
+        locations: [
+          {
+            name: 'Gyeongbokgung Palace',
+            location: 'Jongno-gu, Seoul, South Korea'
+          },
+          {
+            name: 'N Seoul Tower',
+            location: 'Yongsan-gu, Seoul, South Korea'
+          },
+          {
+            name: 'Jeju Island',
+            location: 'Jeju-do, South Korea'
+          }
+        ]
+      }
     }
   };
 
