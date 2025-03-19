@@ -139,70 +139,73 @@ export default function ChatInterface({ onLocationSelect }: ChatInterfaceProps) 
               </Select>
             </div>
           </div>
-
-          {/* Add Search History Section */}
-          {searchHistory && searchHistory.length > 0 && (
-            <div className="mt-4 pt-4 border-t">
-              <div className="flex items-center gap-2 mb-2 text-sm text-muted-foreground">
-                <History className="h-4 w-4" />
-                <span>Recent Searches</span>
-              </div>
-              <div className="space-y-2">
-                {searchHistory.map((entry: SearchHistoryEntry, index: number) => (
-                  <div 
-                    key={index}
-                    className="text-sm p-2 bg-muted rounded-md cursor-pointer hover:bg-muted/80"
-                    onClick={() => {
-                      setInput(entry.query);
-                      if (entry.location) {
-                        onLocationSelect(entry.location, entry.category || undefined);
-                      }
-                    }}
-                  >
-                    <div className="font-medium">{entry.query}</div>
-                    {entry.location && (
-                      <div className="text-xs text-muted-foreground">
-                        Location: {entry.location}
-                      </div>
-                    )}
-                    <div className="text-xs text-muted-foreground">
-                      {new Date(entry.timestamp).toLocaleString()}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
-        <ScrollArea className="flex-1 p-4">
-          <div className="space-y-4">
-            {messages.map((msg, i) => (
-              <div
-                key={i}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-lg p-4 ${
-                    msg.role === 'user'
-                      ? 'bg-primary text-primary-foreground ml-4'
-                      : 'bg-muted mr-4'
-                  }`}
-                >
-                  {msg.content}
+        <ScrollArea className="flex-1">
+          <div className="p-4 space-y-4">
+            {/* Search History Section */}
+            {searchHistory && searchHistory.length > 0 && (
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-2 text-sm text-muted-foreground">
+                  <History className="h-4 w-4" />
+                  <span>Recent Searches</span>
                 </div>
-              </div>
-            ))}
-            {chatMutation.isPending && (
-              <div className="flex justify-start animate-pulse">
-                <div className="bg-muted mr-4 max-w-[80%] rounded-lg p-4">
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Finding the best recommendations for you...</span>
-                  </div>
+                <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                  {searchHistory.map((entry: SearchHistoryEntry, index: number) => (
+                    <div 
+                      key={index}
+                      className="text-sm p-2 bg-muted rounded-md cursor-pointer hover:bg-muted/80"
+                      onClick={() => {
+                        setInput(entry.query);
+                        if (entry.location) {
+                          onLocationSelect(entry.location, entry.category || undefined);
+                        }
+                      }}
+                    >
+                      <div className="font-medium">{entry.query}</div>
+                      {entry.location && (
+                        <div className="text-xs text-muted-foreground">
+                          Location: {entry.location}
+                        </div>
+                      )}
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(entry.timestamp).toLocaleString()}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
+
+            {/* Chat Messages */}
+            <div className="space-y-4">
+              {messages.map((msg, i) => (
+                <div
+                  key={i}
+                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[80%] rounded-lg p-4 ${
+                      msg.role === 'user'
+                        ? 'bg-primary text-primary-foreground ml-4'
+                        : 'bg-muted mr-4'
+                    }`}
+                  >
+                    {msg.content}
+                  </div>
+                </div>
+              ))}
+              {chatMutation.isPending && (
+                <div className="flex justify-start animate-pulse">
+                  <div className="bg-muted mr-4 max-w-[80%] rounded-lg p-4">
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Finding the best recommendations for you...</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </ScrollArea>
 

@@ -20,6 +20,12 @@ interface CategoryConfig {
 }
 
 const getLocationData = (location: string): Record<string, CategoryConfig> => {
+  // Normalize location name for USA/America
+  const normalizedLocation = location.toLowerCase();
+  if (normalizedLocation === 'usa' || normalizedLocation === 'america' || normalizedLocation === 'united states') {
+    location = 'usa';
+  }
+
   const locationData: Record<string, Record<string, CategoryConfig>> = {
     'mumbai': {
       education: {
@@ -1589,14 +1595,89 @@ const getLocationData = (location: string): Record<string, CategoryConfig> => {
         ]
       }
     },
+    'usa': {
+      education: {
+        color: '#4CAF50',
+        icon: '🎓',
+        locations: [
+          {
+            name: 'Harvard University',
+            location: 'Cambridge, Massachusetts, USA'
+          },
+          {
+            name: 'Stanford University',
+            location: 'Stanford, California, USA'
+          },
+          {
+            name: 'Massachusetts Institute of Technology',
+            location: 'Cambridge, Massachusetts, USA'
+          },
+          {
+            name: 'Yale University',
+            location: 'New Haven, Connecticut, USA'
+          },
+          {
+            name: 'Princeton University',
+            location: 'Princeton, New Jersey, USA'
+          }
+        ]
+      },
+      healthcare: {
+        color: '#F44336',
+        icon: '🏥',
+        locations: [
+          {
+            name: 'Mayo Clinic',
+            location: 'Rochester, Minnesota, USA'
+          },
+          {
+            name: 'Cleveland Clinic',
+            location: 'Cleveland, Ohio, USA'
+          },
+          {
+            name: 'Johns Hopkins Hospital',
+            location: 'Baltimore, Maryland, USA'
+          },
+          {
+            name: 'Massachusetts General Hospital',
+            location: 'Boston, Massachusetts, USA'
+          },
+          {
+            name: 'UCLA Medical Center',
+            location: 'Los Angeles, California, USA'
+          }
+        ]
+      },
+      tourism: {
+        color: '#2196F3',
+        icon: '🏛️',
+        locations: [
+          {
+            name: 'Statue of Liberty',
+            location: 'New York City, New York, USA'
+          },
+          {
+            name: 'Grand Canyon',
+            location: 'Arizona, USA'
+          },
+          {
+            name: 'Yellowstone National Park',
+            location: 'Wyoming, USA'
+          },
+          {
+            name: 'Walt Disney World',
+            location: 'Orlando, Florida, USA'
+          },
+          {
+            name: 'Golden Gate Bridge',
+            location: 'San Francisco, California, USA'
+          }
+        ]
+      }
+    },
   };
 
-  const locationKey = location.toLowerCase();
-  return locationData[locationKey] || {
-    education: { color: '#4CAF50', icon: '🎓', locations: [] },
-    healthcare: { color: '#F44336', icon: '🏥', locations: [] },
-    tourism: { color: '#2196F3', icon: '🏛️', locations: [] }
-  };
+  return locationData[location] || {};
 };
 
 export default function MapView({ location }: MapViewProps) {
